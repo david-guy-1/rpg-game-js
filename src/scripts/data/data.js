@@ -6,6 +6,8 @@ import player_skill from '../classes/player_skill.js';
 import monster_generator from "../generators/G_Monster.js"
 import effect from '../classes/effect.js';
 import town from '../classes/town.js';
+
+// a "tutorial" dungeon with keys, a chest, a generated monster, and a boss
 export function make_dungeon(){
 	
 		var monster1 = new monster("goblin", 1000, 0,10000, [], "",[] );
@@ -31,7 +33,12 @@ export function make_dungeon(){
 		<li>Note that the skeleton does a one-shot at 100 ticks. Use protect to defend against that.</li>
 		<li>The smite undead monster requires the monster to be undead, and also for you to have a sword of undead fighting.</li>
 		<li>You also need the ring of health to survive their attacks.</li>
-		</ul>` , 5, 6, 
+		</ul>` ,
+		`
+		You did it! <br /> Press any key to go back.
+		`
+		,
+		5, 6, 
 		[[3,2,"down"], [1,1,"right"], [1, 0, "down"], [1, 1, "down"]], //walls
 		[[1,1,item_entity], [1,2,monster_entity], [2,2,monster_entity2]], // entities
 		0, 0,
@@ -40,7 +47,21 @@ export function make_dungeon(){
 		);
 		return dungeon_inst;		
 }
-
+// a dungeon where you win by moving right.
+export function make_right_dungeon(){
+		return new dungeon("Walk right" , `Just walk right` ,
+		`
+		You walked right!<br /> <h1>Good for you!</h1> <br />
+		`
+		,
+		5, 6, 
+		[], //walls
+		[], // entities
+		0, 0, //starting location
+		[],[]//locks and keys
+		//no params
+		);
+}
 export function make_skills(){
 			var basic_attack = new player_skill("basic attack", 1, 40, 0, [], [], [], "A basic attack");
 
@@ -51,6 +72,11 @@ export function make_skills(){
 		return [basic_attack, smite_undead, protect ];
 }
 
+
 export function make_town(){
 	return new town("town1", [make_dungeon()], [], []);
+}
+
+export function make_right_town(){
+	return new town("town1", [make_right_dungeon()], [], []);
 }

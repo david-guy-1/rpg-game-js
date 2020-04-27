@@ -8,6 +8,7 @@ import D_Fight_end from "./scripts/display/D_Fight_end.js";
 import D_Inventory from "./scripts/display/D_Inventory.js";
 import D_Dungeon from "./scripts/display/D_Dungeon.js";
 import D_Dungeon_Info from "./scripts/display/D_Dungeon_Info.js";
+import D_Dungeon_End from "./scripts/display/D_Dungeon_End.js";
 import D_Town from "./scripts/display/D_Town.js";
 import D_Skills from "./scripts/display/D_Skills.js";
 // this is the view!
@@ -129,6 +130,9 @@ class App extends React.Component {
 		
 
 		var game = this.X;
+		if(game.started == false){
+			return <div> Not started </div>;
+		}
 		var state = game.game_state();
 		var stack = this.interface_stack;
 		var interface_state = stack[stack.length-1];
@@ -136,26 +140,29 @@ class App extends React.Component {
 		//we're in the game
 		if(interface_state == "game"){
 			// we're fighting someone?
-			if(state == "fighting"){
-				return (<D_Combat combat={ game.combat_instance }/>);			
-			} else if (state == "fight end"){
-				return <D_Fight_end items={game.items_dropped} selected={game.selected} chosen = {game.chosen} inventory_empty = {U.count(game.inventory, undefined)}/>
-			} else if (state == "dungeon"){
-				if(game.dismissed == false){
-					return <D_Dungeon_Info dungeon_instance={game.dungeon_instance}/>
+			if(state.name == "fighting"){
+				return (<D_Combat combat={ state.combat_instance }/>);			
+			} else if (state.name == "fight end"){
+				return <D_Fight_end items={state.items_dropped} selected={state.selected} chosen = {state.chosen} inventory_empty = {U.count(game.inventory, undefined)}/>
+			} else if (state.name == "dungeon"){
+				if(state.dismissed == false){
+					return <D_Dungeon_Info dungeon_instance={state.dungeon_instance}/>
 				} else {
-					return <D_Dungeon dungeon_instance={game.dungeon_instance}/>
+					return <D_Dungeon dungeon_instance={state.dungeon_instance}/>
 				}
 			}
-			else if (state == "town"){
-				return <D_Town town={game.town}/>
+			else if(state.name == "dungeon end"){
+				return <D_Dungeon_End dungeon_instance={state.dungeon_instance} />
+			}
+			else if (state.name == "town"){
+				return <D_Town town={state.town}/>
 			}
 		} else if (interface_state == "inventory"){
 			return <D_Inventory items={game.inventory} equip={game.player.items} selected_item = {this.inv_selected} selected_equip ={this.equip_selected} />
 		} else if (interface_state == "skills"){
 			return <D_Skills skills={game.skill_pool} equip={game.player.skills} selected_skill = {this.selected_skill} selected_equip ={this.selected_equip_skill} />
 		} 
-		return (<div> nothing {game.game_stack.toString()} </div>);
+		return (<div> nothing {JSON.stringify(game.game_stack)} </div>);
 	}
 	
 	componentDidMount(){

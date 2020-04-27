@@ -16,27 +16,19 @@ class D_Fight_end extends React.Component {
 		this.render = this.render.bind(this);
 	}
 	move_left(){
-		var selected = this.props.selected;
-		var items = this.props.items;
-		if(selected != 0){
-			window.game.selected -= 1;
-			window.controller.rerender();
-		}
+		window.game.select_left();
+		window.controller.rerender();
+		
 	}
 	select_item(){
-		var selected = this.props.selected;
-		if(window.game.chosen[window.game.selected] != undefined){
-			window.game.chosen[selected]  = !window.game.chosen[selected] 
-			window.controller.rerender();
-		}
+		window.game.select_item();
+		window.controller.rerender();
+
 	}
 	move_right(){
-		var selected = this.props.selected;
-		var items = this.props.items;
-		if(selected != items.length-1){
-			window.game.selected += 1;
-			window.controller.rerender();
-		}
+		window.game.select_right();
+		window.controller.rerender();
+		
 	}
 	
 	render(){
