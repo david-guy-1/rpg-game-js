@@ -30,14 +30,21 @@ class game {
 		this.inventory = U.fillArray(undefined, 36);
 		this.game_stack = [];
 		this.skill_pool = [];
-
 		this.player = new playerC(5, 10, 1000, 1000, U.fillArray(undefined, 6), []);
-		
+		this.started = false;
 		
 	}
 	// utilities:
 	game_state(){
 		return this.game_stack[this.game_stack.length-1];
+	}
+	get_frame_with_name(name){
+		for(var i=this.game_stack.length-1; i>=0; i--){
+			if(this.game_stack[i].name == name){
+				return this.game_stack[i];
+			}
+		}
+		return undefined;
 	}
 	give_item(item){
 		for(var i=0; i<this.inventory.length;i++){
@@ -72,27 +79,24 @@ class game {
 	}
 	// fight commands:
 	start_fight(combat_instance){
-		this.combat_instance = combat_instance; 
-		this.game_stack.push("fighting");
-		this.combat_instance.fight_begin(0,0);
-		this.items_type = "fight"; // so that when items are collected, we'd know if it was from a fight or from chest.
+		this.game_stack.push({name :"fighting",combat_instance :combat_instance});
+		combat_instance.fight_begin(0,0);
 	}
 	fight_tick(){
-		U.assert(this.game_state() == "fighting");
-		this.combat_instance.fight_tick();
+		U.assert(this.game_state().name == "fighting");
+		var inst = this.game_state().combat_instance;
+		inst.fight_tick();
 			// fight is over now!
-		if(this.combat_instance.fight_ended){
+		if(inst.fight_ended){
 			// player wins
-			if(this.combat_instance.fight_result == "player wins"){
-				var items_dropped = this.combat_instance.items_dropped
-				this.combat_instance = undefined;
-				this.game_stack.pop();
+			if(inst.fight_result == "player wins"){
+				var items_dropped = inst.items_dropped;
 				this.start_fight_end(items_dropped);
 				
 				
 			}
 			// player loses. 
-			else if (this.combat_instance.fight_result == "player loses"){
+			else if (inst.fight_result == "player loses"){
 				this.game_stack[this.game_stack.length-1] = "player loses";				
 			}
 		}
@@ -100,44 +104,63 @@ class game {
 	
 	// fight end commands:
 	start_fight_end(items){
-		this.game_stack.push("fight end");
-		
-		this.items_dropped = items;
-		this.chosen = U.fillArray(false, items.length);
-		this.selected = 0;		
+		this.game_stack.push({"name":"fight end", items_dropped : items, "chosen": U.fillArray(false, items.length), "selected":0})
+	}
+	select_item(){
+		var frame_ = this.game_state();
+		if(frame_.chosen[frame_.selected] != undefined){
+			frame_.chosen[frame_.selected] = !frame_.chosen[frame_.selected]
+		}
+	}
+	select_left(){
+		var frame_ = this.game_state();
+		if(frame_.selected != 0 ){
+			frame_.selected -=1;
+		}
+	}
+	select_right(){
+		var frame_ = this.game_state();
+		if(frame_.selected != frame_.items_dropped.length-1 ){
+			frame_.selected +=1;
+		}
 	}
 	
 	finished_items(){
-		for(var i=0; i<this.items_dropped.length; i++){
-			if(this.chosen[i]){
-				this.give_item(this.items_dropped[i]);
+		var frame_ = this.game_state();
+		for(var i=0; i<frame_.items_dropped.length; i++){
+			if(frame_.chosen[i]){
+				this.give_item(frame_.items_dropped[i]);
 			}
 		}
-		if(this.items_type == "fight"){
-			dm.dungeon_fight_ended(this.dungeon_instance);
-		} else if(this.items_type == "chest"){
-			dm.dungeon_chest_collected(this.dungeon_instance);
-		}
+		var type = this.get_frame_with_name("fighting"); // fight or chest?
+		var di = this.get_frame_with_name("dungeon");
+		if(di != undefined){
+			di = di.dungeon_instance;
 		
-		this.items_type = undefined;
+			if(type != undefined){
+				dm.dungeon_fight_ended(di);
+				this.game_stack.pop() // pop this and pop the fight as well
+			} else{
+				dm.dungeon_chest_collected(di);
+			}
+		
+		}
 		this.game_stack.pop();
 	}
 	//dungeon commands
 	enter_dungeon(dungeon){
 		//do NOT mutate the dungeon at all. note that combat clones the monsters, so we can call it.
-		this.game_stack.push("dungeon");
-		this.dungeon_instance = new I_Dungeon(dungeon);
-		this.dismissed = false;
-		dm.dungeon_begin(this.dungeon_instance);
+		this.game_stack.push({name:"dungeon", "dungeon_instance":new I_Dungeon(dungeon), "dismissed":false});
+		dm.dungeon_begin(this.game_state().dungeon_instance);
 	}
 	dismiss(){
-		this.dismissed = true;
+		this.game_state().dismissed = true;
 	}
 	undismiss(){
-		this.dismissed = false;
+		this.game_state().dismissed = false;
 	}
 	player_pressed_button(code){ // player pressed a button in the dungeon. check things.
-		if(this.game_state() == "dungeon"){
+		if(this.game_state().name == "dungeon"){
 			/*
 			when the user preses a button in a dungeon, this happens:
 			1. the controller's handleKeyDown function is called, 
@@ -149,7 +172,7 @@ class game {
 			7. without waiting for the entity to finish, determines if dungeon should end, and if no event triggered and we should end, ends the dungeon.
 			8. After the entity is finished and items have already been added to inventory, dm.dungeon_fight_ended or dm.dungeon_chest_collected is called, if applicable.
 			*/
-			var d  = this.dungeon_instance;
+			var d  = this.get_frame_with_name("dungeon").dungeon_instance;
 			if(d.player_on() != undefined){
 				var entity = d.player_on();
 				d.remove_entity_by_location(d.player_x, d.player_y);
@@ -157,7 +180,6 @@ class game {
 					this.start_fight(new I_Combat(this.player, entity.monsters, d));
 				}
 				if(entity.type == "item"){
-					this.items_type = "chest"; 
 					this.start_fight_end(entity.items);
 				}
 			}
@@ -165,15 +187,15 @@ class game {
 				d.unlock_door(d.key_on());
 				dm.dungeon_door_unlocked(this.dungeon_instance);
 			}
-			if(dm.dungeon_end(d) && this.game_state() == "dungeon"){
-				this.game_stack.pop(); // leave dungeon
+			if(dm.dungeon_end(d) && this.game_state().name== "dungeon"){
+				this.game_stack[this.game_stack.length-1].name = "dungeon end"; // leave dungeon
 			}
 		}
 	}
+	
 	// town commands
 	enter_town(town){
-		this.game_stack.push("town");
-		this.town = town;
+		this.game_stack.push({name:"town", town : town});
 	}
 	//shop commands 
 	
@@ -233,11 +255,13 @@ class game {
 		this.enter_dungeon(dungeon_inst);
 	}
 	test_town(){
-		this.enter_town(data.make_town());
+		this.skill_pool = data.make_skills();
+		
+		this.enter_town(data.make_right_town());
 	}
 	game_start_up(){
 		console.log("testing");
-		setTimeout( () => {window.controller.game.test_town();window.controller.rerender();}, 100);
+		setTimeout( () => {window.controller.game.test_town();window.controller.game.started = true;window.controller.rerender();}, 100);
 	}
 }
 

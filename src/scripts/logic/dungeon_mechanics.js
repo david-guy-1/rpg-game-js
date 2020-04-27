@@ -43,5 +43,8 @@ export function dungeon_end(dungeon_inst){ //called at every button press, retur
 	if(dungeon_inst.dungeon.name == "Tutorial Dungeon"){
 		return dungeon_inst.dungeon_over;
 	}
+	if(dungeon_inst.dungeon.name == "Walk right"){
+		return dungeon_inst.player_x > 4;
+	}
 	return false;
 }

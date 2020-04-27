@@ -19,7 +19,7 @@ class controller{
 	//note that the controller side should only call game's exposed functions. 
 	set_fight_interval(){
 		var game = this.game ;
-		if(game.game_state() == "fighting" && this.game_interval == undefined){
+		if(game.game_state().name == "fighting" && this.game_interval == undefined){
 			this.fight_next_render = undefined;
 			this.game_interval = setInterval(() => {this.fight_tick()}, 1000/this.fight_framerate); 
 		}
@@ -30,7 +30,7 @@ class controller{
 	fight_tick(){
 		//TODO: de-couple rendering from ticks.
 		var game = this.game;
-		if(game.game_state() == "fighting"){
+		if(game.game_state().name == "fighting"){
 			if(this.fight_next_render == undefined){
 				game.fight_tick(); 
 				this.rerender();
@@ -61,31 +61,31 @@ class controller{
 		var rerender = this.rerender.bind(this);
 		var state = game.game_state();
 		var interface_stack = this.view.interface_stack;
-		if(state == "town"){ // we're in a town, check where we clicked and if we clicked on something useful
-			var town_coords = T.town_data[game.town.name];
+		if(state.name == "town"){ // we're in a town, check where we clicked and if we clicked on something useful
+			var town_coords = T.town_data[game.game_state().town.name];
 			var index = 0;
 			for (var rect of town_coords.dungeons){
 				if(e.pageX > rect[0] && e.pageX < rect[2] && e.pageY > rect[1] && e.pageY < rect[3]){
 					//enter this dungeon;
-					game.enter_dungeon(game.town.dungeons[index]);
+					game.enter_dungeon(game.game_state().town.dungeons[index]);
 					break;
 				}
 				index += 1;
 			}
 			var index = 0;
 			for (var rect of town_coords.shops){
-				if(game.game_state()  == "town" && e.pageX > rect[0] && e.pageX < rect[2] && e.pageY > rect[1] && e.pageY < rect[3]){
+				if(game.game_state().name  == "town" && e.pageX > rect[0] && e.pageX < rect[2] && e.pageY > rect[1] && e.pageY < rect[3]){
 					//enter this shop;
-					game.enter_shop(game.town.shops[index]);
+					game.enter_shop(game.game_state().town.shops[index]);
 					break;
 				}
 				index += 1;
 			}
 			var index = 0;
 			for (var rect of town_coords.quest_takers){
-				if(game.game_state()  == "town" && e.pageX > rect[0] && e.pageX < rect[2] && e.pageY > rect[1] && e.pageY < rect[3]){
+				if(game.game_state().name  == "town" && e.pageX > rect[0] && e.pageX < rect[2] && e.pageY > rect[1] && e.pageY < rect[3]){
 					//enter this quest giver;
-					game.enter_quest_giver(game.town.quest_takers[index]);
+					game.enter_quest_giver(game.game_state().town.quest_takers[index]);
 					break;
 				}
 				index += 1;
@@ -103,9 +103,9 @@ class controller{
 		var interface_state = interface_stack[interface_stack.length-1];
 		if(interface_state == "game"){
 			// fighting an enemy right now
-			if(state == "fighting"){
+			if(state.name == "fighting"){
 				this.set_fight_interval();
-				var inst = game.combat_instance;
+				var inst = game.game_state().combat_instance;
 				var skillKeys = ["KeyA", "KeyS", "KeyD", "KeyF", "KeyG", "KeyZ", "KeyX", "KeyC", "KeyV", "KeyB" ];
 				if(skillKeys.indexOf(e.code) != -1){
 					var index = skillKeys.indexOf(e.code);
@@ -122,35 +122,35 @@ class controller{
 				}
 			}
 			
-			else if(state == "fight end"){
-				if(e.code == "KeyA" && game.selected != 0){
-					game.selected -= 1; 
+			else if(state.name == "fight end"){
+				if(e.code == "KeyA" && game.game_state().selected != 0){
+					game.game_state().selected -= 1; 
 					rerender();
 				}
-				if(e.code == "KeyS" && game.selected != game.items_dropped.length-1){
-					game.selected += 1; 
+				if(e.code == "KeyS" && game.game_state().selected != game.game_state().items_dropped.length-1){
+					game.game_state().selected += 1; 
 					rerender();
 				}
-				if(e.code == "KeyQ" && game.chosen[game.selected] != undefined){
-					game.chosen[game.selected]  = !game.chosen[game.selected] 
+				if(e.code == "KeyQ" && game.game_state().chosen[game.game_state().selected] != undefined){
+					game.game_state().chosen[game.game_state().selected]  = !game.game_state().chosen[game.game_state().selected] 
 					rerender();
 				}
 				if(e.code == "Space"){
-					game.finished_items();
+					game.game_state().finished_items();
 					
 					rerender();
 				}
-			} else if (state == "dungeon"){
+			} else if (state.name == "dungeon"){
 				if(e.code == "KeyW"){
-					game.dungeon_instance.move_player("up");
+					game.game_state().dungeon_instance.move_player("up");
 				} else if(e.code == "KeyA"){
-					game.dungeon_instance.move_player("left");
+					game.game_state().dungeon_instance.move_player("left");
 				} else if(e.code == "KeyS"){
-					game.dungeon_instance.move_player("down");
+					game.game_state().dungeon_instance.move_player("down");
 				} else if(e.code == "KeyD"){
-					game.dungeon_instance.move_player("right");
+					game.game_state().dungeon_instance.move_player("right");
 				} else if (e.code == "Space"){
-					if(game.dismissed){
+					if(game.game_state().dismissed){
 						game.undismiss();
 					} else {
 						game.dismiss();
@@ -159,12 +159,16 @@ class controller{
 				game.player_pressed_button(e.code);
 			
 				rerender();
-			} else if (state == "town" || state == "dungeon"){
+			} else if (state.name == "town" || state == "dungeon"){
 				if (e.code == "KeyQ"){
 					this.view.go_to_inventory();
 				}else if (e.code == "KeyE"){
 					this.view.go_to_skills();
 				}
+			}
+			else if (state.name == "dungeon end"){
+				game.game_stack.pop();
+				rerender();
 			}
 		} else if (interface_state == "inventory"){
 			var ro = this.view;

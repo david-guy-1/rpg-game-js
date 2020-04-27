@@ -25,7 +25,7 @@ class D_Town extends React.Component {
 		<img src={require("../../images/" + T.town_data[town.name].image ) } 
 		style={{"position":"absolute", "top":0,"left":0}}/>
 		
-		<canvas ref={this.canvasRef} style={{"position":"absolute", "top":0,"left":0}} width={1920} height={750}/>
+		<canvas ref={this.canvasRef} style={{"position":"absolute", "top":0,"left":0}} width={1600} height={720}/>
 		</div>
 	    );
 	}
