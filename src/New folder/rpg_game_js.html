@@ -1,0 +1,857 @@
+<html>
+<head>
+
+<style>
+#instructions{
+	position:absolute;
+	top:10;
+	left:150;
+}
+#combat_screen{
+	position:absolute;
+	top:50;
+	left:50;
+	width:800px;
+	height:600px;
+	border: 5px solid black;
+}
+.monster_div{
+	width:130;
+	height:300;
+	border: 1px solid red;
+}
+#monster_1{
+	position:absolute;
+	top:70;
+	left:80;
+
+}
+#monster_2{
+	position:absolute;
+	top:70;
+	left:230;
+}
+#monster_3{
+	position:absolute;
+	top:70;
+	left:380;
+}
+#monster_4{
+	position:absolute;
+	top:70;
+	left:530;
+}
+#monster_5{
+	position:absolute;
+	top:70;
+	left:680;
+}
+
+.enemy_health_bar{
+	height:15px;
+	background-color:grey;
+}
+.enemy_health_bar_inner{
+	height:15px;
+	background-color:green;
+}
+#player_skills{
+	position:absolute;
+	top:390;
+	left:100;
+	width:700;
+	height:120;
+	border: 1px solid black;
+	border-collapse:collapse;
+}
+
+#player_health_bar {
+	position:absolute;
+	top:514;
+	left:100;
+	width:700;
+	height:12;
+	background-color:grey;
+}
+#player_health_bar_inner {
+	position:absolute;
+	top:514;
+	left:100;
+	height:12;
+	background-color:green;
+}
+#player_stats{
+	position:absolute;
+	top:530;
+	left:100;
+	width:700;
+	height:120;
+	border: 1px solid black;
+}
+
+.effect_box{
+	font-size:14;
+	text-align:left;
+}
+.player_skill{
+	vertical-align: top;
+	height:60;
+}
+#ticks_counter{
+	position:absolute;
+	top:10;
+	left:700;
+}
+#stage{
+	position:absolute;
+	top:50;
+	left:50;
+	border-collapse:collapse;
+	border:1px solid black;
+}
+
+.world_table_cell{
+	width:30;
+	height:30;
+	border-collapse:collapse;
+	border:1px solid grey;
+}
+#inventory{
+	position:absolute;
+	top:50;
+	left:10;
+}
+.inventory_cell{
+	width:70;
+	height:70;
+	border-collapse:collapse;
+	border:1px solid black;
+}
+#player_equipped{
+	position:absolute;
+	top:50;
+	left:700;
+}
+#equipped_selection{
+	position:absolute;
+	border: 1px solid black;
+	top:50;
+	left:470;
+	width:210;
+	height:210;
+}
+#inventory_selection{
+	position:absolute;
+	border: 1px solid black;
+	top:270;
+	left:470;
+	width:210;
+	height:210;
+}
+</style>
+<script type="text/javascript" src="classes.js"></script>
+<script type="text/javascript" src="sha256.js"></script>
+<script type="text/javascript" src="tables.js"></script>
+<script type="text/javascript" src="io.js"></script>
+<script type="text/javascript" src="town.js"></script>
+<script type="text/javascript">
+
+//call initializations for tables
+
+create_standard_dungeon();
+//classes
+
+
+
+
+
+
+
+function create_monster(name){
+	return monsters_table[name].clone();
+
+}
+
+//tables, maybe this should be in a different place
+
+
+
+function has_item(name){ //checks if the player has an item equipped
+	for(var i=0;i<equipped_limit;i++){
+		if(items[i] == null){
+			continue;
+		}
+		if(items[i].name == name){
+			return true;
+		}
+	}
+	return false;
+}
+
+
+//game global variables - changing these might also need interface to be changed
+var game_stack = []; // something, maybe "walking, fighting, etc."
+
+var monster_limit = 5;
+var attacks_limit = 10;
+var fps = 30;
+var inventory_limit = 36; 
+var equipped_limit = 6;
+
+//base stats
+var base_attack =0;
+var base_defense = 0;
+var base_max_hp = 400;
+var base_max_mana=0;
+var player_current_cd = 0; // in ticks.
+var player_effects = []; 
+
+var player_skill_levels = { // table of skill levels
+    "basic attack":undefined,
+}
+
+player_skills = [null,null,null,null,null,null,null,null,null,null]; // attacks the player has equipped, as strings
+items = [null, null, null,null,null,null];// items the player has equipped, also as strings. The effects of these items will be in various places, such as the "calculate_stats" function.
+
+inventory = [];
+for(var i=0; i<inventory_limit;i++){
+	inventory.push(null);
+} // inventory is a pair (name, description)
+
+//overworld global variables
+var width=14; // should be an even number
+var overworld_location = [0,0];
+var oo = new overworld_object("A");
+var overworld_cleared_list = {};
+//dungeon global variables
+
+
+
+// interface starts here
+
+var currently_displayed = ""; // what is currently being displayed?
+
+
+
+var instructions_text = {"fight":"asdfgzxcvb: select attack, 12345: select enemy. you cannot run",
+"walking":"wasd : move, i : go to inventory, z : go to skills",
+"inventory":"t : equip item, wasd : move inventory, ol: move equipped item, i: leave inventory",
+"skills": "asdfgzxcvb : choose skill to swap out. drop down menu : choose skill to swap in. qw : scroll between skills, r : switch skills, z : leave. You cannot equip a skill more than once",
+"overworld":"wasd : move, z : go to skills, i : go to inventory",
+"fight end":"as : scroll, q : toggle chosen, space: go back",
+"town":"placeholder text",
+
+ }
+ 
+ 
+function draw_stage_fight(){
+    	
+		set_data("instructions", instructions_text["fight"]);
+		//draw the fighting stage.
+		
+		set_data("screen", "<table ><tr> <td id=\"combat_screen\"> </td> </tr></table>"); //box
+		
+		// draw the monsters boxes
+		for(var i=0; i<monster_limit;i++){
+			append_data("screen", replace_all("<div id=\"monster_NUM\" class =\"monster_div\"><table width=130><tr height=130 ><td id=\"icon_NUM\"></td></tr><tr height=30 ><td id=\"name_NUM\"></td></tr><tr height=30 ><td id=\"hp_NUM\" class=\"hp_box\" style=\"background-color:white\" ></td></tr><tr height=60><td id=\"effects_NUM\" class=\"effect_box\" style=\"background-color:white\"></td></tr><tr id=\"health_bar_NUM\" class=\"enemy_health_bar\"><td><div id=\"health_bar_NUM_inner\" class=\"enemy_health_bar_inner\" style=\"width:100%\" /></td></tr> </table> </div>","NUM", (i+1).toString()));
+		}
+		//draw the skills boxes
+		var s= "<table id=\"player_skills\" border=1px> <tr height=60> "
+		for(var i=1;i<=5;i++){
+			s += replace_all("<td width=130 id=\"player_NUM\" class=\"player_skill\"></td>", "NUM", i.toString());
+		}
+		s += "</tr><tr height=60>"
+		for(var i=6;i<=10;i++){
+			s += replace_all("<td width=130 id=\"player_NUM\" class=\"player_skill\"></td>", "NUM", i.toString());
+		}		
+		s += "</tr></table>";
+		
+		append_data("screen", s)
+		//draw the player's health bar
+		append_data( "screen", "<div id=\"player_health_bar_inner\"></div>");
+		
+		// draw the player stats
+		append_data( "screen", "<table id=\"player_stats\"> <tr height=50><td width=100 id=\"player_hp_2\"> </td><td  width=100 id=\"player_attack_2\"><td  width=100 id=\"player_defense_2\"> </td> <td  width=100 id=\"player_mana_2\"> </td><td  width=100 id=\"player_cd_2\"> </td></tr><tr height=50><td colspan=5 id=\"player_effects_2\"></tr></table>");
+		append_data( "screen",  "<p id=\"ticks_counter\"> 0 </p>");
+}
+function update_stage_fight(){ // update the combat stage
+	for(var i=0; i<monster_limit;i++){
+		// clear the monster if it's not there.
+		if(fighting_monsters[i] == undefined){
+		//clear the boxes
+			var words = ["icon", "name", "effects", "hp"]
+			for (var j=0;j<4;j++){
+				set_data(words[j]+"_" + (i+1).toString(),"");
+			}
+			
+			set_style("monster_" + (i+1).toString(), "background-color" , "white");
+			//clear the health bars
+			set_style("health_bar_" + (i+1) + "_inner", "width",  "0%");
+			set_style("health_bar_" + (i+1) + "","background-color", "white");
+			
+		} else{
+			var key = (i+1).toString();
+			var monster = fighting_monsters[i];
+			//for the background, first get the delay and determine the appropriate color
+			// about to go is red (ff0000), long delay is blue (0000ff).
+			var constant = 2*fps;
+			var monster_cd = Math.floor(Math.min(monster.current_cd, constant)*255/constant); // between 0 and 255, ready to go is 0
+			var red = Math.floor(-monster_cd + 255);
+			var blue = Math.floor(monster_cd);
+			set_style("monster_"+key , "background-color", "rgb(" +red.toString() + ",0," + blue.toString() + ")");
+			//draw the monster's icon, name, etc.
+			set_data("icon_"+key , "<img src=\"" +images[monster.name] +"\" />");
+			set_data("name_"+key,  monster.name);
+			set_data("hp_"+key, (monster.hp).toString() + "/" + (monster.max_hp).toString());
+			//monster's effects
+			set_data("effects_"+key, "");
+			for(var j=0;j<monster.effects.length;j++){
+				var effect = monster.effects[j];
+				append_data("effects_"+key,effect.name + " " + effect.strength.toString() + "(" + effect.duration.toString() + ").&nbsp;"); 
+			}
+			// monster HP bar
+			var value = parseInt(100*monster.hp/monster.max_hp);
+			set_style("health_bar_" + key + "_inner", "width",value + "%");
+		}
+		if(i == currently_attacking_monster){
+			set_style("name_" + (i+1).toString(),"background-color", "ffaaaa");
+		} else {
+			set_style("name_" + (i+1).toString(),"background-color","ffffff");
+		}
+	}
+	//health bar
+	var health_value = player_hp/player_max_hp;
+	set_style("player_health_bar_inner","width", 700*health_value);
+	//attacks
+	var attacks_labels = ["A","S","D","F","G","Z","X","C","V","B"];
+	for(var i=0;i<attacks_limit;i++){
+		set_data("player_"+(i+1).toString(), attacks_labels[i] + " : ");
+		if(player_skills[i] != null){ // if the letter corresponds to a skill
+			append_data("player_"+(i+1).toString(), player_skills[i]+ " <br />");
+			var attack_properties = attacks_table[player_skills[i]][player_skill_levels[player_skills[i]]];
+			append_data("player_"+(i+1).toString(),"Mana:" + attack_properties[2].toString()  + " 	/ Delay:" + attack_properties[1].toString());
+		}
+		//current attack
+		if(i == currently_queued_attack){
+			set_style("player_" + (i+1).toString(), "background-color", "ffaaaa");
+		} else {
+			set_style("player_" + (i+1).toString(), "background-color",  "ffffff");
+		}
+	}
+	//stats
+	set_data("player_hp_2","HP: " + player_hp.toString() + "/" + player_max_hp.toString());
+	set_data("player_attack_2","Attack: " + player_attack.toString());
+	set_data("player_defense_2","Defense: " + player_defense.toString());
+	set_data("player_mana_2","Mana: " + player_mana.toString() + "/" + player_max_mana.toString());
+	set_data("player_cd_2","Delay: " + player_current_cd.toString())
+	var text_should_be = ""
+	for(var j=0;j<player_effects.length;j++){
+		var effect = player_effects[j];
+		text_should_be += effect.name + " " + effect.strength.toString() + "(" + effect.duration.toString() + ").&nbsp;"; 
+	}
+	set_data("player_effects_2", text_should_be);
+	if(player_current_cd == 0){
+		if(last_turn_flag == true){
+			set_style("player_stats","background-color","aaffff");
+		} else{
+			last_turn_flag = true;
+		}
+	} else {
+		set_style("player_stats" , "background-color",  "ffffff");
+		last_turn_flag = false;
+	}
+	//current ticks
+	set_data("ticks_counter", current_ticks);
+}
+
+function draw_stage_walking(){
+
+	set_data("instructions",instructions_text["walking"] );
+	var s = "<table id=\"stage\">";
+	//make the rows
+	for (var i=0;i<num_rows;i++){
+		s += "<tr id=\"table_row_" + i.toString() + "\">";
+		for(var j=0;j<num_cols;j++){
+			s += "<td id=\"table_cell_" + i.toString() + "," + j.toString() + "\" class=\"world_table_cell\"> </td>";
+		}
+	}
+	set_data("screen", s);
+}
+function update_stage_walking(){
+	for (var i=0;i<num_rows;i++){
+		for(var j=0;j<num_cols;j++){
+			//compute what the text should be
+			var s="table_cell_" + i.toString() + "," +j.toString();
+			var text_should_be = "";
+			set_style(s , "background-color", "white");
+			//draw the player
+			if(i == player_row && j == player_col){
+				text_should_be = "<img src =\"player.png\" \/ >";
+			}
+			//draw entities
+			if (entities_table[i.toString() + "," + j.toString()] != undefined){
+				//monster
+				if(entities_table[i.toString() + "," + j.toString()][0] == "monster"){
+					text_should_be += "<img src =\"monster_icon.jpg\" \/ >";
+				}
+			}
+			set_data(s, text_should_be);
+		}
+	}
+}
+
+function draw_stage_inventory(){
+	set_data("instructions", instructions_text["inventory"]);
+	//first draw the inventory boxes;
+	var s = "<table id=\"inventory\">";
+	for(var i=1;i<=6;i++){
+		s += "<tr id=\"inventory_row_" + i.toString() + "\">";
+		for(var j=1; j<=6;j++){
+			s += "<td id=\"inventory_cell_" + i.toString() + "," + j.toString() + "\"  class=\"inventory_cell\"> </td>";
+		}
+		s += "</tr>";
+	}
+	s += "</table>";
+	//then the player's equipped items
+	s += "<table id=\"player_equipped\">";
+	for(var i=0;i<6;i++){
+		s += "<tr><td id=\"player_equipped_" + (i+1).toString() + "\" class=\"inventory_cell\"> </td></tr>";
+	}
+	// then the two screens showing currently equipped and inventory
+	s += "</table>";
+	s += "<div id=\"equipped_selection\" ></div>";
+	s += "<div id=\"inventory_selection\" ></div>";
+	set_data("screen",s);
+}
+
+var chosen_item = 0;
+var chosen_equipped = 0;
+//unlike the chosen enemy and skill, these variables have no impact on the game and
+//therefore belong solely to the interface.
+//also, these are 0-indexed
+
+function update_stage_inventory(){
+	for(var i=1;i<=6;i++){
+		for(var j=1; j<=6;j++){
+			var obj = "inventory_cell_" + i.toString() + "," + j.toString();
+			var current_item = inventory[6*(i-1) + j-1];
+			update_icon(obj, current_item);
+
+			//chosen item
+			if(6*(i-1) + j-1 ==  chosen_item){
+				set_style(obj, "background-color" , "aaaaff");
+			} else{
+				set_style(obj, "background-color" , "ffffff");
+			}
+		}
+	}
+	//for the currently equipped
+	for(var i=1; i<=6; i++){
+		var obj = "player_equipped_" + i.toString();
+		var current_item = items[i-1];
+		update_icon(obj, current_item);
+		//chosen item
+		if(i-1 ==  chosen_equipped){
+			set_style(obj, "background-color" , "aaaaff");
+		} else{
+			set_style(obj, "background-color" , "ffffff");
+		}
+	}
+	// selection detailed information
+	var obj = "equipped_selection";
+	var text_should_be = "equipped:<br />";
+	if(items[chosen_equipped] != null){
+		var current_item = items[chosen_equipped]
+		text_should_be += current_item.name + "<br />";
+		text_should_be += "Attack: +" + current_item.attack + "<br />";
+		text_should_be += "Defense: +" + current_item.defense + "<br />";
+		text_should_be += "HP: +" + current_item.hp + "<br />";
+		text_should_be += current_item.description + "<br />";		
+	}
+	set_data(obj, text_should_be);
+	//inventory detailed information
+	var obj = "inventory_selection";
+	var text_should_be = "";
+	if(inventory[chosen_item] != null){
+		var current_item = inventory[chosen_item]
+		text_should_be += current_item.name + "<br />";
+		text_should_be += "Attack: +" + current_item.attack + "<br />";
+		text_should_be += "Defense: +" + current_item.defense + "<br />";
+		text_should_be += "HP: +" + current_item.hp + "<br />";
+		text_should_be += current_item.description + "<br />";		
+	}
+	set_data(obj, text_should_be);
+}
+
+var chosen_skill = 1; // the 10 slots at the bottom
+var chosen_skill_left = 0; // the slots at the left.
+
+function draw_stage_skills(){
+	set_data("instructions",instructions_text["skills"]);
+	//left side
+	s = "<table id=\"player_skills_table\">";
+	for (var i=0;i<7;i++){
+		s += "<tr><td style=\"height:40;width:100\" id=\"skill_table_" + i + "\"></td></tr>";
+	}
+	s += "</table>";
+	//boxes with skills on them
+	s+= "<table id=\"player_skills\" border=1px> <tr height=60> "
+	for(var i=1;i<=5;i++){
+			s += replace_all("<td width=130 id=\"player_NUM\" class=\"player_skill\"></td>", "NUM", i.toString());
+	}
+	s += "</tr><tr height=60>"
+	for(var i=6;i<=10;i++){
+			s += replace_all("<td width=130 id=\"player_NUM\" class=\"player_skill\"></td>", "NUM", i.toString());
+	}		
+	s += "</tr></table>";
+	s += "<div id=\"current_equipped_skill\" style=\"position:absolute;top:60;left:210;width:250;height:300;border:2px solid red;\"> </div>";	
+	s += "<div id=\"current_skill\" style=\"position:absolute;top:60;left:470;width:250;height:300;border:2px solid blue;\"> </div>";
+	s += "<div id=\"outcome\" style=\"position:absolute;top:570;left:200;width:400;height:50\"> </div>";
+	set_data("screen", s);
+
+}
+function update_stage_skills(){
+	//sets the left side
+	var skills = Object.keys(player_skill_levels);
+	skills.push("")
+	set_style("skill_table_3", "background-color", "#aaffaa");
+	for(var i=0;i<7;i++){
+		//calculate which skill should go here
+		var number = chosen_skill_left+i-3
+		while(number < 0){
+			number += skills.length
+		}
+		number = number%skills.length
+		set_data("skill_table_" + i, skills[number]);
+		if(i == 3){
+			var chosen_skill_left_name = skills[number];
+		}
+	}
+	//sets the currently equipped skills
+	for(var i=1;i<=10;i++){
+		if(player_skills[i-1] != null){
+			set_data("player_"+i, player_skills[i-1]);
+		} else{
+			set_data("player_"+i, "");
+		}
+		if(i == chosen_skill){
+			set_style("player_"+i, "background-color", "#ffff80");
+		} else{
+			set_style("player_"+i, "background-color", "white");
+		}
+	}
+	//set the description of currently chosen skill
+	if(player_skills[chosen_skill-1] == null){
+		set_data("current_equipped_skill", "");
+	}	else{
+		var chosen_skill_name = player_skills[chosen_skill-1];
+		set_data("current_equipped_skill","<b>Currently equipped:" + chosen_skill_name + "(" +player_skill_levels[chosen_skill_name] + ")" + "</b><br /> <br />"+ attacks_table[chosen_skill_name][0]);
+	}
+	//and the currently chosen drop-down skill
+	
+	if(chosen_skill_left_name == ""){
+		set_data("current_skill", "");
+	} else{
+		set_data("current_skill","<b> swap to:" + chosen_skill_left_name + "(" + player_skill_levels[chosen_skill_left_name] + ")" + "</b><br /> <br />"+ attacks_table[chosen_skill_left_name][0]);
+	}
+}
+
+function draw_stage_overworld(){
+    set_data("instructions",instructions_text["overworld"]);
+	var s = "<table>"
+	for (var i=0;i<width;i++){
+		s += '<tr>';
+		for (var j=0;j<width;j++){
+			if(i == width/2 && j == width/2){
+				s += '<td id="tile' + i + ',' + j + '" style="width:40px; height:40px;border:2px solid red;">i</td>';
+			}else{
+				s += '<td id="tile' + i + ',' + j + '" style="width:40px; height:40px">i</td>';
+			}
+		}
+		s += '</tr>';
+	}
+	s += "</table>";
+	document.getElementById("screen").innerHTML = s;
+}
+function update_stage_overworld(){
+	var x_c = overworld_location[0];
+	var y_c = overworld_location[1];
+	for (var i=0;i<width;i++){
+		for (var j=0;j<width;j++){
+			var x = x_c - width/2 + j;
+			var y = y_c - width/2 + i;
+			var object = oo.get_item(x,y);
+			
+			var s = "";
+			
+			//special or generic
+			
+			if(object == "quest 1" || object == "quest 2" || object == "quest 3" || object.substr(0, 5) == "skill"){
+				var type="special";
+			} else{
+				var type="generic"
+			}
+			if(type == "special"){
+				//if not already cleared:
+				if(overworld_cleared_list[x+ "," + y] == undefined){
+					if(object == "quest 1"){
+						s = '<img src="./overworld_images/q1.png" style="z-index:0;" />'
+					}
+					else if(object == "quest 2"){
+						s = '<img src="./overworld_images/q2.png" style="z-index:0;" />'
+					}else if(object == "quest 3"){					
+						s = '<img src="./overworld_images/q3.png" style="z-index:0;" />'
+					} else if (object.substr(0, 5) == "skill"){
+						s = '<img src="./overworld_images/sd.png" style="z-index:0;" />'
+					}
+				} else{ //already cleared special item
+					s = "";
+					set_style("tile"+i+","+j, "background-color", "000000");
+				}
+			}else{ //generic items
+				var type = object.split(",")[0];
+				var thing = object.split(",")[1];
+				if(type == "desert"){
+					set_style("tile"+i+","+j, "background-color", "DEDB83"); 
+				} else if(type == "arena"){
+					set_style("tile"+i+","+j, "background-color", "DE839E"); 
+				} else if(type == "cave"){
+				set_style("tile"+i+","+j, "background-color", "5F5F5F"); 
+				} else if(type == "forest"){
+					set_style("tile"+i+","+j, "background-color", "2A8740"); 
+				} else if(type == "graveyard"){
+					set_style("tile"+i+","+j, "background-color", "685330"); 
+				} else{ 
+					throw "this should not happen - don't know kind of ground"
+				}				
+				if(overworld_cleared_list[x+ "," + y] == undefined){ // if it's not already cleared
+					if(thing == "nothing special"){
+						s += "";
+					} else if(thing == "monster"){
+						s += '<img src="./overworld_images/s_monster.png" style="z-index:1;" />'
+					} else if(thing == "random dungeon"){
+						s += '<img src="./overworld_images/s_random_dungeon.png" style="z-index:1;" />'
+					} else if(thing == "epic dungeon"){
+						s += '<img src="./overworld_images/s_epic_dungeon.png" style="z-index:1;" />'
+					} else if(thing == "boss"){
+						s += '<img src="./overworld_images/s_boss.png" style="z-index:1;" />'
+					} else if(thing == "gem bearer"){
+						s += '<img src="./overworld_images/s_gem_bearer.png" style="z-index:1;" />'
+					} else {
+						throw "this should not happen - can't find type of special" + thing;
+					}
+				}
+			}
+				set_data("tile"+i+","+j, s); 
+		}
+	}	
+	return "success";
+	// on 90x90:
+	// full : 38547
+	// hashing time:10316
+	// drawing time:27700
+}
+
+var selected_drop_item = 0;
+function draw_stage_fight_end(){
+    set_data("instructions",instructions_text["fight end"]);
+	var num_dropped_items=items_dropped.length;
+	chosen_items = []; // must be global, "update" will use this
+	for(var i=0;i<num_dropped_items;i++){
+		chosen_items.push(1);
+	}
+	var s="<div id=\"drop_icon\" style=\"position:absolute;border:1px solid black;top:50;left:470;width:70;height:70;\"></div>";
+	s += "<div id=\"drop_window\" style=\"position:absolute;border:1px solid black;top:150;left:470;width:210;height:300;\"></div>";
+	s += "<h1 style=\"position:absolute;top:100;left:100;width:200;\">You win!</h1>";
+	s += "<h1 id=\"item_counter\" style=\"position:absolute;top:250;left:100;width:200;\">........</h1>"; //drop counter
+	s += "<h1 id=\"chosen_counter\" style=\"position:absolute;top:320;left:100;width:200;\">........</h1>"; //chosen items
+	s += "<h1 id=\"inventory_counter\" style=\"position:absolute;top:410;left:100;width:200;\">........</h1>"; //inventory slots
+	s += "<h1 id=\"chosen_indicator\" style=\"position:absolute;top:50;left:570;width:200;\">........</h1>"; //chosen?
+	s += "<p id=\"information\" style=\"position:absolute;top:170;left:100;width:200;\"></p>"; //chosen?
+	set_data("screen", s);
+	
+}
+
+function update_stage_fight_end(){
+	var num_dropped_items=items_dropped.length;
+
+	if(num_dropped_items == 0){
+		set_data("item_counter", "There are no item drops");
+	} else{
+		set_data("item_counter", "Drop " + (selected_drop_item+1) + " of " + num_dropped_items);
+		set_data("chosen_counter", count(chosen_items, 1) + " items chosen")
+		set_data("inventory_counter", count(inventory, null) + " empty inventory slots")
+		if(chosen_items[selected_drop_item] == 1){
+			set_data("chosen_indicator", "chosen");
+		} else{
+			set_data("chosen_indicator", "not chosen");
+		}
+		var current_item = items_dropped[selected_drop_item]; // pointer to dropped item
+		var text_should_be = current_item.name + "<br />";
+		text_should_be += "Attack: +" + current_item.attack + "<br />";
+		text_should_be += "Defense: +" + current_item.defense + "<br />";
+		text_should_be += "HP: +" + current_item.hp + "<br />";
+		text_should_be += current_item.description + "<br />";	
+		//the code is duplicated from inventory, find a way to fix this.
+		set_data("drop_window", text_should_be);
+		update_icon("drop_icon", current_item);
+	}
+}
+
+var last_turn_flag = false; // if the player was ready to go last turn as well
+var last_ticked = Date.now();
+
+function interface_() { // reads the current state and draws the interface. 
+//put onload = interface_() at the body. 
+	//tick as needed to maintain fps
+	var delay = 1000/fps
+	var now = Date.now();
+	var game_state = game_stack[game_stack.length-1];
+	if(game_state == undefined){
+		throw "game stack is empty";
+	}
+	while(last_ticked < now){ // tick and increment timer until it's reached current time
+		//tick
+		if(game_state == "fighting"){
+			fight_tick();
+		}
+		last_ticked += delay;
+	}
+	
+	if(game_state == "fighting"){
+		if(currently_displayed != "fighting"){
+			draw_stage_fight();
+			currently_displayed = "fighting";
+		}
+		update_stage_fight();	
+	} 
+	
+	if(game_state == "walking"  ){
+		if(currently_displayed != "walking"){
+			draw_stage_walking();	
+			currently_displayed = "walking";
+		}
+		update_stage_walking();
+	} 
+	if(game_state == "inventory"){
+		if(currently_displayed != "inventory"){
+			draw_stage_inventory();
+			currently_displayed = "inventory";
+		}	
+		update_stage_inventory();		
+	}
+	if(game_state == "skills"){
+		if(currently_displayed != "skills"){
+			draw_stage_skills();
+			currently_displayed = "skills";
+		}
+		update_stage_skills();	
+	
+	}
+	if(game_state == "overworld"){
+		if(currently_displayed != "overworld"){
+			draw_stage_overworld();
+			currently_displayed = "overworld;";
+		}
+		update_stage_overworld();
+	}
+	if(game_state == "fight end"){
+		if(currently_displayed != "fight end"){
+			draw_stage_fight_end();
+			currently_displayed = "fight end";
+		}
+		update_stage_fight_end();
+	}
+	if(game_state == "town"){ //town is special. 
+		if(currently_displayed != "town"){
+			draw_stage_town();
+			currently_displayed = "town";
+		}
+		update_stage_town();
+	}
+	
+	if(currently_displayed == "fighting"){
+		setTimeout("interface_()", 30); // only repeatedly call if the screen should change without a keyboard event causing a change (such as fighting)
+		//all other times - call on key press
+	}
+	
+}
+//input handlers
+
+//test cases
+/*function test_fight(){
+	fighting_monsters[0] = create_monster("goblin")
+	fighting_monsters[1] = create_monster("skeleton")
+	fighting_monsters[0].effects.push(["spinning", 10, 150])
+	fighting_monsters[1].effects.push(["weakened bones", 20, 300])
+	fighting_monsters[1].effects.push(["weakened bones", 20, 300])
+	player_skills[0] = "basic attack";
+	player_skills[1] = "quick attack";
+	player_skills[2] = "smite undead";
+	base_attack = 50;
+	player_effects.push(["I am the best", 1000, 3000]);
+	fight_begin(fighting_monsters);
+	
+	interface_();
+}*/
+function test_walk(){
+	if(game_stack.length !=0){
+		return;
+	}
+	//Equip your attack skills, kill the top monster, take the epic sword but not the sword of undead fighting, equip it, and use it to kill the bottom monster
+
+	for(var i=0; i<35;i++){
+		give_item(new item("useless item", 0, 0, 0, 0, "A completely useless item"));
+	}
+
+	player_skill_levels = {"basic attack":1,
+	"quick attack":3,
+	"smite undead":3,
+	"empower":2,};
+	items[3] = new item("sword", 10, 0, 0, 0, "A basic sword");
+	game_stack = ["town"];
+	interface_();
+}
+/*function test_skills(){
+	player_skills[0] = "empower";
+	player_skills[1] = "quick attack";
+	player_skills[2] = "smite undead";
+	game_state = "skills"
+	interface_();
+}*/
+function test_overworld(){
+	player_skills[0] = "empower";
+	player_skills[1] = "quick attack";
+	player_skills[2] = "smite undead";
+	player_skill_levels = {"basic attack":1,
+	"quick attack":3,
+	"smite undead":3,
+	"empower":2,};
+	items[3] = new item("enchanted sword", 1000, 0, 0, 0, "A sword that does a ton of damage");
+	game_stack = ["overworld"];
+	interface_();
+}
+// do superclasses and subclasses https://kevhuang.com/subclasses-and-inheritance-in-javascript/
+document.addEventListener("keypress", key_pressed);
+
+
+
+
+
+
+
+</script>
+</head>
+
+<body>
+
+
+
+.
+  
+<div id="screen"><button onclick="test_walk()">debug</button>	</div>
+<div id="instructions"></div>
+
+
+</body>
+</html>

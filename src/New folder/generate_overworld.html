@@ -1,0 +1,238 @@
+<html>
+<head>
+<script type="text/javascript" src="sha256.js"></script>
+<script type="text/javascript" src="tables.js"></script>
+<script type="text/javascript" src="io.js"></script>
+<script type="text/javascript">
+//generate_map
+
+//example of generating overworld:
+var width = 15;
+
+class overworld_object{
+	constructor(seed){
+		this.seed = seed;
+		this.quest_1 = [randint(700, 1200, seed + " quest item 1 x") , randint(700, 1200, seed + " quest item 1 y")];
+		this.quest_2 = [randint(-1200, -700, seed + " quest item 2 x"), randint(-300, 300, seed + " quest item 2 y")];
+		this.quest_3 = [randint(-1200, -700, seed + " quest item 3 x") , randint(700, 1200, seed + " quest item 3 y")];
+		
+		// skill dungeons
+		// skills should have some kind of "distance" here.
+		this.skills_list = Object.keys(attacks_table);
+		this.skill_dungeons = [];
+		for(var i=0; i<this.skills_list.length;i++){		
+			var distances = skill_distances[this.skills_list[i]];
+			var distance = randint(distances[0], distances[1], seed + this.skills_list[i] + " skill dungeon distance");
+			this.skill_dungeons.push(point_on_circle(distance, seed + this.skills_list[i] + " skill dungeon"));
+		}
+		this.table_counter = 0;
+		this.table_limit =  10000;
+		this.table_1 = {};
+		this.table_2 = {}; 
+		
+	} 
+	add_to_table(key, value){ //adds an entry to the lookup table. If there are more than table_limit entries, then the table is moved to table_2,and table_2 is deleted. 
+		if(this.table_1[key] == undefined){
+			this.table_counter+=1;
+		}
+		this.table_1[key] = value;
+		if(this.table_counter == this.table_limit){
+			this.table_limit = 0;
+			this.table_2 = this.table_1;
+			this.table_1 = {};
+		}
+	
+	}
+	lookup_table(key){
+		
+		if(table_1[key] != undefined){
+			return table_1[key];
+		}
+		if(table_2[key] != undefined){
+			return table_2[key];
+		}
+		return undefined;
+	}
+	special_table(value){
+		// if spawning something:
+		if(value < 0.7){ //70% chance to spawn a normal monster
+			return "monster"
+		} else if (value < 0.85){ // 15% chance to spawn a standard dungeon
+			return "random dungeon";
+		} else if (value < 0.9){ // 5% chance to spawn an epic dungeon
+			return "epic dungeon";
+		} else if (value < 0.95){ // 5% chance to spawn a boss
+			return "boss";
+		} else{ // 5% chance to spawn a gem bearer
+			return "gem bearer"
+		}
+	}
+	get_item(x, y){
+		var seed = this.seed;
+	//gets the item at this location
+	// note that this can be overridden by, for example, quests or already clearing things.
+		var key = x + ","+y;
+		if(this.lookup_table(key) != undefined){
+			return this.lookup_table(key);
+		}
+		
+		if(x == this.quest_1[0] && y ==this.quest_1[1]){
+			return "quest 1";
+		}
+		if(x == this.quest_2[0] && y ==this.quest_2[1]){
+			return "quest 2";
+		}	
+		if(x == this.quest_3[0] && y ==this.quest_3[1]){
+			return "quest 3";
+		}
+		for(var i=0; i<this.skills_list.length;i++){
+			if(this.skill_dungeons[i][0] == x && this.skill_dungeons[i][1] == y){
+				return "skill dungeon " + this.skills_list[i];
+			}
+		}
+		// "generic" item
+		var angle = (Math.atan2(y, x)+ 2*Math.PI)%(Math.PI*2);
+		//calculate deviations - these are between -0.05 and 0.05
+		//calculate the type of space we're in
+		var dev = rand(seed + " deviation 1" + x + "," + y) * 0.1 - 0.05;
+		
+		if(0 + dev<= angle && angle <= 1 + dev){
+			var type="desert,";
+		}
+		else if(1 + dev <= angle && angle <= 2.2+dev){
+			var type="arena,";
+		}
+		else if(2.2 + dev <= angle && angle <= 3.4+dev){
+			var type="cave,";
+		}
+		else if(3.4 + dev <= angle && angle <= 4.6+dev){
+			var type="forest,";
+		}
+		else if(4.6 + dev <= angle && angle <= 2*Math.PI + dev){
+			var type="graveyard,";
+		} else{
+			var type="desert,"
+		}
+		//special item?
+		var special_item = rand(seed + x + "," + y + "special?");
+		var chance_of_thing = 0.2;
+		if(special_item < chance_of_thing){ // 30% chance to spawn something
+			var return_value = type + this.special_table(special_item/chance_of_thing);
+		}else{
+			var return_value =  type + "nothing special";
+		}
+		this.add_to_table(key, return_value);
+		return return_value;
+	}
+
+}
+
+var oo = new overworld_object("SEED");
+oo.quest_1 = [0,0];
+function draw(x_c, y_c){
+	times = Date.now()
+	for (var i=0;i<width;i++){
+		for (var j=0;j<width;j++){
+			var x = x_c - width/2 + j;
+			var y = y_c - width/2 + i;
+			var object = oo.get_item(x,y);
+			
+			var s = "";
+			if(object == "quest 1"){
+				s = '<img src="./overworld_images/q1.png" style="z-index:0;" />'
+			}
+			else if(object == "quest 2"){
+				s = '<img src="./overworld_images/q2.png" style="z-index:0;" />'
+			}else if(object == "quest 3"){
+				s = '<img src="./overworld_images/q3.png" style="z-index:0;" />'
+			} else if (object.substr(0, 5) == "skill"){
+				s = '<img src="./overworld_images/sd.png" style="z-index:0;" />'
+			}
+			else{
+				// need the type as well 
+				var type = object.split(",")[0];
+				var thing = object.split(",")[1];
+				if(type == "desert"){
+					set_style("tile"+i+","+j, "background-color", "DEDB83"); 
+				} else if(type == "arena"){
+					set_style("tile"+i+","+j, "background-color", "DE839E"); 
+				} else if(type == "cave"){
+				set_style("tile"+i+","+j, "background-color", "5F5F5F"); 
+				} else if(type == "forest"){
+					set_style("tile"+i+","+j, "background-color", "2A8740"); 
+				} else if(type == "graveyard"){
+					set_style("tile"+i+","+j, "background-color", "685330"); 
+				} else{
+					throw "this should not happen - can't find type of ground";
+				}				
+				if(thing == "nothing special"){
+					s += "";
+				} else if(thing == "monster"){
+					s += '<img src="./overworld_images/s_monster.png" style="z-index:1;" />'
+				} else if(thing == "random dungeon"){
+					s += '<img src="./overworld_images/s_random_dungeon.png" style="z-index:1;" />'
+				} else if(thing == "epic dungeon"){
+					s += '<img src="./overworld_images/s_epic_dungeon.png" style="z-index:1;" />'
+				} else if(thing == "boss"){
+					s += '<img src="./overworld_images/s_boss.png" style="z-index:1;" />'
+				} else if(thing == "gem bearer"){
+					s += '<img src="./overworld_images/s_gem_bearer.png" style="z-index:1;" />'
+				} else {
+					throw "this should not happen - can't find type of special" + thing;
+				}
+			}
+				set_data("tile"+i+","+j, s); 
+		}
+	}	
+	times = Date.now() - times;
+	console.log(times);
+	return "success";
+	// on 90x90:
+	// full : 38547
+	// hashing time:10316
+	// drawing time:27700
+}
+function test(){
+			document.getElementById("tile11,3").innerHTML = '<img src="./overworld_images/forest.png" style="z-index:0;" /> <img src="./overworld_images/s_gem_bearer.png" style="z-index:1;" />'; 
+
+
+}
+function load(){
+	var s = "<table>"
+	for (var i=0;i<width;i++){
+		s += '<tr>';
+		for (var j=0;j<width;j++){
+			if(i == width/2 && j == width/2){
+				s += '<td id="tile' + i + ',' + j + '" style="width:40px; height:40px;border:2px solid red;">i</td>';
+			}else{
+				s += '<td id="tile' + i + ',' + j + '" style="width:40px; height:40px">i</td>';
+			}
+		}
+		s += '</tr>';
+	}
+	s += "</table>";
+	document.getElementById("here").innerHTML = s;
+}
+
+function test_gen_rate(){
+	var value=100000;
+	var x = Date.now()
+	for(var i=0;i<value;i++){
+		rand("testing " + i)
+	
+	}
+	console.log(( Date.now()-x)/value + " milliseconds per random number");
+}
+
+
+</script>
+</head>
+
+
+<body onload = "load()">
+<div id="here">
+
+</div>
+
+</body>
+</html>
