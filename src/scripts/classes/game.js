@@ -13,6 +13,7 @@ import * as dm from "../logic/dungeon_mechanics.js"
 import * as U from '../utilities.js';
 import monster_generator from '../generators/G_Monster.js';
 import * as data from "../data/data.js";
+import * as tm from "../logic/town_mechanics.js" 
 // might need more imports
 
 //game should not call any controller methods, at all
@@ -32,6 +33,7 @@ class game {
 		this.skill_pool = [];
 		this.player = new playerC(5, 10, 1000, 1000, U.fillArray(undefined, 6), []);
 		this.started = false;
+		this.progress = {} // record completed dungeons, etc. 
 		
 	}
 	// utilities:
@@ -138,10 +140,10 @@ class game {
 			di = di.dungeon_instance;
 		
 			if(type != undefined){
-				dm.dungeon_fight_ended(di);
+				dm.dungeon_fight_ended(di,this.progress);
 				this.game_stack.pop() // pop this and pop the fight as well
 			} else{
-				dm.dungeon_chest_collected(di);
+				dm.dungeon_chest_collected(di,this.progress);
 			}
 		
 		}
@@ -151,7 +153,7 @@ class game {
 	enter_dungeon(dungeon){
 		//do NOT mutate the dungeon at all. note that combat clones the monsters, so we can call it.
 		this.game_stack.push({name:"dungeon", "dungeon_instance":new I_Dungeon(dungeon), "dismissed":false});
-		dm.dungeon_begin(this.game_state().dungeon_instance);
+		dm.dungeon_begin(this.game_state().dungeon_instance,this.progress);
 	}
 	dismiss(){
 		this.game_state().dismissed = true;
@@ -164,15 +166,37 @@ class game {
 			/*
 			when the user preses a button in a dungeon, this happens:
 			1. the controller's handleKeyDown function is called, 
-			2. if the press is WASD, handleKeyDown calls I_Dungeon's move_player, even if it goes into a walls
-			3. If not a wall, move_player calls dm.dungeon_moved
-			4. Regardless of walls, handleKeyDown calls this function (game.player_pressed_button)
-			5. player_pressed_button checks if there is an entity on where the player moved to. If so, remove it first, then activate it.
-			6. player_pressed_button checks if a key has been stepped on. If so, unlocks the corresponding door first, then calls dungeon_door_unlockeds
-			7. without waiting for the entity to finish, determines if dungeon should end, and if no event triggered and we should end, ends the dungeon.
-			8. After the entity is finished and items have already been added to inventory, dm.dungeon_fight_ended or dm.dungeon_chest_collected is called, if applicable.
+			2. that function calls this function, which first calls I_Dungeon's move_player function
+			3. If the move is successful, calls dm.dungeon_moved
+			4. Then, checks if there is an entity on where the player moved to. If so, remove it first, then activate it.
+			5. player_pressed_button checks if a key has been stepped on. If so, unlocks the corresponding door first, then calls dungeon_door_unlocked
+			6. without waiting for the entity to finish, determines if dungeon should end, and if no event triggered and we should end, ends the dungeon.
+			7. After the entity is finished and items have already been added to inventory, dm.dungeon_fight_ended or dm.dungeon_chest_collected is called, if applicable.
 			*/
 			var d  = this.get_frame_with_name("dungeon").dungeon_instance;
+			
+			// first, move player 
+			var moved = false;
+			if(code == "KeyW"){
+				moved = d.move_player("up");
+			} else if(code == "KeyA"){
+				moved =d.move_player("left");
+			} else if(code == "KeyS"){
+				moved =d.move_player("down");
+			} else if(code == "KeyD"){
+				moved =d.move_player("right");
+			} else if (code == "Space"){
+				if(this.game_state().dismissed){
+					this.undismiss();
+				} else {
+					this.dismiss();
+				}
+			}
+			
+			if(moved){
+				dm.dungeon_moved(d, this.progress)
+			}
+				
 			if(d.player_on() != undefined){
 				var entity = d.player_on();
 				d.remove_entity_by_location(d.player_x, d.player_y);
@@ -185,9 +209,9 @@ class game {
 			}
 			if(d.key_on() != undefined){
 				d.unlock_door(d.key_on());
-				dm.dungeon_door_unlocked(this.dungeon_instance);
+				dm.dungeon_door_unlocked(this.dungeon_instance,this.progress);
 			}
-			if(dm.dungeon_end(d) && this.game_state().name== "dungeon"){
+			if(dm.dungeon_end(d,this.progress) && this.game_state().name== "dungeon"){
 				this.game_stack[this.game_stack.length-1].name = "dungeon end"; // leave dungeon
 			}
 		}
@@ -196,6 +220,17 @@ class game {
 	// town commands
 	enter_town(town){
 		this.game_stack.push({name:"town", town : town});
+	}
+	//entered a town
+	town_clicked(index){
+		var output = tm.town_click(this.game_state().town, this.progress, index);
+		if(output.type == "dungeon"){
+			this.enter_dungeon(output.dungeon);
+		} else if (output.type == "item"){
+			this.start_fight_end(output.items);
+		} else if (output.type == "fight"){
+			this.start_fight(new I_Combat(this.player, output.monsters, undefined));
+		}
 	}
 	//shop commands 
 	
@@ -257,7 +292,7 @@ class game {
 	test_town(){
 		this.skill_pool = data.make_skills();
 		
-		this.enter_town(data.make_right_town());
+		this.enter_town(data.make_town_by_name("town1"));
 	}
 	game_start_up(){
 		console.log("testing");

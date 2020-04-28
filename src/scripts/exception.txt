@@ -1,0 +1,13 @@
+try{
+    asjda
+} catch(e){
+	if(e instanceof EvalError){
+		console.log("eval");
+	} 
+	else if(e instanceof ReferenceError){
+		console.log("reference");
+	}else {
+		throw e;
+	}
+} 	
+

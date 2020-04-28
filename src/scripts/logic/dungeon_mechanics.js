@@ -4,17 +4,17 @@ import monster from "../classes/monster.js";
 import item from "../classes/item.js";
 
 
-export function dungeon_begin(dungeon_inst){
+export function dungeon_begin(dungeon_inst, progress){
 	if(dungeon_inst.dungeon.name == "Tutorial Dungeon"){
 		dungeon_inst.added_boss = false;
 		dungeon_inst.dungeon_over = false;
 	}
 }
 
-export function dungeon_moved(dungeon_inst){ // only called when the player has actually moved.
+export function dungeon_moved(dungeon_inst, progress){ // only called when the player has actually moved.
 
 }
-export function dungeon_fight_ended(dungeon_inst){ 
+export function dungeon_fight_ended(dungeon_inst, progress){ 
 	if(dungeon_inst.dungeon.name == "Tutorial Dungeon"){
 		// if the monster at [1,2] has been defeated
 		if(dungeon_inst.get_entity_at_location(1,2) == undefined && dungeon_inst.added_boss == false){
@@ -29,15 +29,15 @@ export function dungeon_fight_ended(dungeon_inst){
 
 }
 
-export function dungeon_chest_collected(dungeon_inst){ 
+export function dungeon_chest_collected(dungeon_inst, progress){ 
 	//alert("chest items collected!");
 }
-export function dungeon_door_unlocked(dungeon_inst){ 
+export function dungeon_door_unlocked(dungeon_inst, progress){ 
 	//alert("chest items collected!");
 }
 
 
-export function dungeon_end(dungeon_inst){ //called at every button press, return whether or not we should end the dungeon, called after dungeon_moved
+export function dungeon_end(dungeon_inst, progress){ //called at every button press, return whether or not we should end the dungeon, called after dungeon_moved
 	// note that this is called even if a fight begins, but is called on the first tick of the fight.
 	
 	if(dungeon_inst.dungeon.name == "Tutorial Dungeon"){

@@ -148,7 +148,7 @@ export var images_lst = { // images for all things: monsters, items, etc.
 
 export var town_data = { // name of town -> object with keys  : image, dungeons,shops,quest_takers
 	// image is a name, other 3 are quadruples indicating coordinates of rectangles we can click on. tlx, tly, brx, bry
-	"town1": {"image":"town1.jpg", "dungeons":[[846,169,1060,417]],"shops":[[170,230,394,418]],"quest_takers":[[402,100,638,401]]}
+	"town1": {"image":"town1.jpg", "rectangles":[[170,230,394,418, "blue"],[402,100,638,401, "green"],[846,169,1060,417, "red"]]}
 	
 }
 
