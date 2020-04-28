@@ -10,7 +10,7 @@ class I_Combat{
 	constructor(player, monster_list, dungeon){ // does not mutate these
 		this.player = player;
 		this.fighting_monsters = [];
-		
+		this.dungeon = dungeon; // this can be undefined
 		for(var i=0; i<monster_list.length; i++){
 			this.fighting_monsters.push(Object.assign(new monster(), monster_list[i]));
 		} // safe to mutate monsters, but not player.

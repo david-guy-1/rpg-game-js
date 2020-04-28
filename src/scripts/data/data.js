@@ -6,26 +6,32 @@ import player_skill from '../classes/player_skill.js';
 import monster_generator from "../generators/G_Monster.js"
 import effect from '../classes/effect.js';
 import town from '../classes/town.js';
+import * as T from "../tables.js";
 
-// a "tutorial" dungeon with keys, a chest, a generated monster, and a boss
-export function make_dungeon(){
-	
+
+//a sampling of items. 
+export function make_items(){
+		var item1 = new item("enchanted sword", 2000, 0, 0, 0, "A sword that does a ton of damage");
+		var item2 = new item("sword of undead fighting", 3, 0, 0,0, "Must be equipped to use the smite undead skill");
+		var item3 = new item("ring of health", 0, 0, 100000,0, "A ring that gives huge health boost");
+		return [item1, item2, item3];
+}
+
+// a sampling of monsters. including item drops, undead, and poison attack
+export function make_monsters(){
 		var monster1 = new monster("goblin", 1000, 0,10000, [], "",[] );
 		var itemDrop1 = new item("useless item", 0, 0, 0, 0, "A completely useless item");
 		var monster2 = new monster("test_skeleton", 2000, 0,12000000, ['undead'],"" , [itemDrop1] )
 		var monster3 = new monster("test", 0, 0,2000, [],"", [] );
 		var monster4 = monster_generator(1.1, 1,1,1,[],"poison attack");
+		return [monster1, monster2, monster3, monster4]
+}
 
-		
-		var item1 = new item("enchanted sword", 2000, 0, 0, 0, "A sword that does a ton of damage");
-		var item2 = new item("sword of undead fighting", 3, 0, 0,0, "Must be equipped to use the smite undead skill");
-		var item3 = new item("ring of health", 0, 0, 100000,0, "A ring that gives huge health boost");
-		
-		var item_entity = new dungeon_entity("item", [item1, item2, item3]);
-		
-		var monster_entity = new dungeon_entity("monster", [monster1, monster2, monster3]);
-		
-		var monster_entity2 = new dungeon_entity("monster", [monster4]);
+// a "tutorial" dungeon with keys, a chest, a generated monster, and a boss
+export function make_dungeon(){
+		var item_entity = new dungeon_entity("item", make_items());		
+		var monster_entity = new dungeon_entity("monster", make_monsters());
+		var monster_entity2 = new dungeon_entity("monster", [make_monsters()[3]]);
 		
 		
 		var dungeon_inst = new dungeon("Tutorial Dungeon" , `<ul>
@@ -47,7 +53,16 @@ export function make_dungeon(){
 		);
 		return dungeon_inst;		
 }
+
+//same as dungeon 1, but no items
+export function make_dungeon_2(){
+	var dungeon_inst = make_dungeon();
+	dungeon_inst.entities.splice(0, 1);
+	return dungeon_inst;
+}	
+
 // a dungeon where you win by moving right.
+
 export function make_right_dungeon(){
 		return new dungeon("Walk right" , `Just walk right` ,
 		`
@@ -77,6 +92,10 @@ export function make_town(){
 	return new town("town1", [make_dungeon()], [], []);
 }
 
+export function make_town_by_name(name){
+	return new town(name, T.town_data[name].rectangles); 
+}
+
 export function make_right_town(){
-	return new town("town1", [make_right_dungeon()], [], []);
+	return new make_town_by_name("town1");
 }

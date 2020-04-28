@@ -1,0 +1,16 @@
+to do list:
+
+make "save" and "load" options
+
+make item shop
+    somehow prevent the same person from selling the same item over and over again
+
+make quests, and quest givers.
+    This includes interfaces for viewing which quests you have
+	and also , some "mechanism" for whether or not it's completed. similar to dungeon_mechanics
+	
+make a "progress" indicator. don't allow repeat clears of dungeons
+    still allow repeat clears of some dungeons
+	this might require generated towns to "depend" on what you have at the time
+	
+town's dungeons, quests, etc. should be computed after clicking it. Need "town mechanics" as well.

@@ -61,6 +61,7 @@ class I_Dungeon{
 	}
 
 	 move_player(direction){ // direction is "up", "down", "left", "right"
+	 // tries to move in a direction. if no wall, return true. otherwise, return false 
 		switch(direction){
 			case "left":
 				var vertical = 0;
@@ -88,8 +89,9 @@ class I_Dungeon{
 		if(!wall){
 			this.player_y += vertical;
 			this.player_x += horizontal;
-			dm.dungeon_moved(this)
+			return true;
 		}
+		return false; 
 	}
 	 unlock_door(i){
 		this.unlocked[i] = true;

@@ -64,32 +64,15 @@ class controller{
 		if(state.name == "town"){ // we're in a town, check where we clicked and if we clicked on something useful
 			var town_coords = T.town_data[game.game_state().town.name];
 			var index = 0;
-			for (var rect of town_coords.dungeons){
+			for (var rect of town_coords.rectangles){
 				if(e.pageX > rect[0] && e.pageX < rect[2] && e.pageY > rect[1] && e.pageY < rect[3]){
-					//enter this dungeon;
-					game.enter_dungeon(game.game_state().town.dungeons[index]);
+					//record as clicked;
+					game.town_clicked(index);
 					break;
 				}
 				index += 1;
 			}
-			var index = 0;
-			for (var rect of town_coords.shops){
-				if(game.game_state().name  == "town" && e.pageX > rect[0] && e.pageX < rect[2] && e.pageY > rect[1] && e.pageY < rect[3]){
-					//enter this shop;
-					game.enter_shop(game.game_state().town.shops[index]);
-					break;
-				}
-				index += 1;
-			}
-			var index = 0;
-			for (var rect of town_coords.quest_takers){
-				if(game.game_state().name  == "town" && e.pageX > rect[0] && e.pageX < rect[2] && e.pageY > rect[1] && e.pageY < rect[3]){
-					//enter this quest giver;
-					game.enter_quest_giver(game.game_state().town.quest_takers[index]);
-					break;
-				}
-				index += 1;
-			}
+
 			rerender();
 		}
 		
@@ -141,23 +124,7 @@ class controller{
 					rerender();
 				}
 			} else if (state.name == "dungeon"){
-				if(e.code == "KeyW"){
-					game.game_state().dungeon_instance.move_player("up");
-				} else if(e.code == "KeyA"){
-					game.game_state().dungeon_instance.move_player("left");
-				} else if(e.code == "KeyS"){
-					game.game_state().dungeon_instance.move_player("down");
-				} else if(e.code == "KeyD"){
-					game.game_state().dungeon_instance.move_player("right");
-				} else if (e.code == "Space"){
-					if(game.game_state().dismissed){
-						game.undismiss();
-					} else {
-						game.dismiss();
-					}
-				}
 				game.player_pressed_button(e.code);
-			
 				rerender();
 			} else if (state.name == "town" || state == "dungeon"){
 				if (e.code == "KeyQ"){
