@@ -21,14 +21,17 @@ class controller{
 		var game = this.game ;
 		if(game.game_state().name == "fighting" && this.game_interval == undefined){
 			this.fight_next_render = undefined;
+			if(this.game_interval != undefined){
+				throw "game interval not undefined";
+			}
 			this.game_interval = setInterval(() => {this.fight_tick()}, 1000/this.fight_framerate); 
+			console.log(this.game_interval);
 		}
 		this.rerender();
 	}
 	
 	// fighting:
 	fight_tick(){
-		//TODO: de-couple rendering from ticks.
 		var game = this.game;
 		if(game.game_state().name == "fighting"){
 			if(this.fight_next_render == undefined){
@@ -48,7 +51,9 @@ class controller{
 				this.rerender();
 			}
 		} else {
-			clearInterval(this.gameInterval);
+		//	console.log("tick called without fighting" + this.game_interval);
+			clearInterval(this.game_interval);
+			this.game_interval = undefined;
 		}
 	}
 	handleClickDown(e){
@@ -56,8 +61,11 @@ class controller{
 		
 	}
 	handleClickUp(e){
-		console.log([e.pageX, e.pageY]);
+	//	console.log([e.pageX, e.pageY]);
 		var game = this.game;
+		if(game.started == false){
+			return; 
+		}
 		var rerender = this.rerender.bind(this);
 		var state = game.game_state();
 		var interface_stack = this.view.interface_stack;
@@ -78,8 +86,13 @@ class controller{
 		
 	}
 	handleKeyDown(e){
-		console.log(e.code);
+	//	console.log(e.code);
+
 		var game = this.game;
+		if(game.started == false){
+			return; 
+		}
+		
 		var rerender = this.rerender.bind(this);
 		var state = game.game_state();
 		var interface_stack = this.view.interface_stack;
@@ -119,7 +132,7 @@ class controller{
 					rerender();
 				}
 				if(e.code == "Space"){
-					game.game_state().finished_items();
+					game.finished_items();
 					
 					rerender();
 				}

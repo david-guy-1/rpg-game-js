@@ -16,7 +16,7 @@ class DC_monster extends React.Component{
 		var monster_cd = Math.min(monster.current_cd,max_cd_color )* 255 / max_cd_color; // this is a number from 0 to 255
 		var red = Math.max(0,Math.floor(-monster_cd + 255));
 		var green = Math.max(0, Math.floor(monster_cd));
-		console.log([red, green, monster_cd])
+		//console.log([red, green, monster_cd])
 		var bg_string = "rgb(" + red + "," +green+",0)";
 
 		return <div style={{"width":c.monster_width + "px", "border":"1px solid black", "position":"absolute", "top":c.monsters_top_left[0] ,"left":c.monsters_top_left[1] + (id)*(c.monster_width + c.monsters_gap) ,  }}>

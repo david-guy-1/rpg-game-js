@@ -10,6 +10,7 @@ class DC_skill extends React.Component{
 		var skill = this.props.skill;
 		var chosen = this.props.selected;
 		var id = this.props.id;
+		var cd = this.props.cooldown;
 		var attacks_labels = ["A","S","D","F","G","Z","X","C","V","B"];
 		return <div style={
 			{"position":"absolute",
@@ -21,7 +22,7 @@ class DC_skill extends React.Component{
 			"padding":c.skill_internal_padding + "px",
 			"background-color":(chosen? "#ffaaaa" : "#ffffff"),
 		} }
-		>{attacks_labels[id]}: {skill.name} < br /> Mana : {skill.mana} , cd : {skill.cd}</div>
+		><span style={{"background-color":(cd == 0 ? "#ffffff" : "#777777")}}>{attacks_labels[id]}: </span> {skill.name} {cd}<br />Mana : {skill.mana} , cd : {skill.cd}</div>
 	}
 }
 

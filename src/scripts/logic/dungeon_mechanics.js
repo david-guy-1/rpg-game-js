@@ -22,7 +22,8 @@ export function dungeon_fight_ended(dungeon_inst, progress){
 			dungeon_inst.add_entity(3,3,new dungeon_entity("monster", [new monster(
 			"boss", 1000, 0, 2000000, ["undead"], "", [])
 			]));
-		} else if(dungeon_inst.get_entity_at_location(3,3) == undefined && dungeon_inst.added_boss == true) {
+		}  
+		if(dungeon_inst.get_entity_at_location(3,3) == undefined && dungeon_inst.added_boss == true) {
 			dungeon_inst.dungeon_over = true;
 		}
 	}

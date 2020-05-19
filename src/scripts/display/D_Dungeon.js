@@ -20,8 +20,8 @@ class D_Dungeon extends React.Component {
 	return <div>
 			  <div id="instructions" style={{"position":"absolute", "top":10,"left":500}} >{T.instructions_text["dungeon"]}</div>
 	
-	<button style={skills_button_css} onClick={function() {window.view.go_to_skills();window.controller.rerender();}}> <h2 style={{"text-align":"center"}}>Skills</h2> </button>
-	<button style={inv_button_css} onClick={function(){window.view.go_to_inventory();window.controller.rerender();}}> <h2 style={{"text-align":"center"}}>Inventory</h2></button>
+	<button style={skills_button_css} onClick={function() {global.g.view.go_to_skills();global.g.controller.rerender();}}> <h2 style={{"text-align":"center"}}>Skills</h2> </button>
+	<button style={inv_button_css} onClick={function(){global.g.view.go_to_inventory();global.g.controller.rerender();}}> <h2 style={{"text-align":"center"}}>Inventory</h2></button>
 	
 	<canvas ref="dungeon_canvas" width={c.dungeon_width} height = {c.dungeon_height} style={canvas_css}> </canvas></div>
 	}
@@ -29,7 +29,7 @@ class D_Dungeon extends React.Component {
 		this.rerender();
 	}
 	componentDidUpdate(){
-		console.log("A");
+	//	console.log("A");
 		this.rerender();
 	}
 	rerender(){
@@ -37,8 +37,8 @@ class D_Dungeon extends React.Component {
 		var dungeon = this.props.dungeon_instance;
 		var px = dungeon.player_x;
 		var py = dungeon.player_y;
-		console.log(px);
-		console.log(py);
+	//	console.log(px);
+	//	console.log(py);
 		var entities = dungeon.entities;
 		
 		var canvas = this.refs.dungeon_canvas;

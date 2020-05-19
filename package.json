@@ -6,6 +6,8 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.4.1",
     "@testing-library/user-event": "^7.2.1",
+    "chromedriver": "^81.0.0",
+    "geckodriver": "^1.19.1",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "react-scripts": "3.4.0"
@@ -14,6 +16,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "s-test": "mocha src/scripts/test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -30,5 +33,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "selenium-webdriver": "^4.0.0-alpha.7"
   }
 }

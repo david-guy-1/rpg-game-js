@@ -99,14 +99,17 @@ class game {
 			}
 			// player loses. 
 			else if (inst.fight_result == "player loses"){
-				this.game_stack[this.game_stack.length-1] = "player loses";				
+				this.player_lose();
 			}
 		}
 	}
-	
+	// player lose commands
+	player_lose(){
+		this.game_stack.push({"name":"player loses"});
+	}
 	// fight end commands:
 	start_fight_end(items){
-		this.game_stack.push({"name":"fight end", items_dropped : items, "chosen": U.fillArray(false, items.length), "selected":0})
+		this.game_stack.push({"name":"fight end", items_dropped : items, "chosen": U.fillArray(true, items.length), "selected":0})
 	}
 	select_item(){
 		var frame_ = this.game_state();
@@ -136,16 +139,18 @@ class game {
 		}
 		var type = this.get_frame_with_name("fighting"); // fight or chest?
 		var di = this.get_frame_with_name("dungeon");
-		if(di != undefined){
-			di = di.dungeon_instance;
 		
+		if(di != undefined){ // if there is a dungeon, call the relevant functions
+			di = di.dungeon_instance;
 			if(type != undefined){
-				dm.dungeon_fight_ended(di,this.progress);
-				this.game_stack.pop() // pop this and pop the fight as well
+				dm.dungeon_fight_ended(di,this.progress); 
 			} else{
 				dm.dungeon_chest_collected(di,this.progress);
 			}
+		}
 		
+		if(type != undefined){
+			this.game_stack.pop() // pop the fight as well;
 		}
 		this.game_stack.pop();
 	}
@@ -268,6 +273,31 @@ class game {
 		this.player.hp = 9999999;
 		this.start_fight(inst);
 	}
+	// same as the dungeon one
+	test_fight_2(){
+		// equip items
+		var items = data.make_items();
+		this.player.items[0] = items[0];
+		this.player.items[1] = items[1];
+		this.player.items[2] = items[2];		
+		//make monsters;
+		var monsters = data.make_monsters();
+		//equip skills
+		this.skill_pool = data.make_skills();
+		this.player.skills[0] = this.skill_pool[0];
+		this.player.skills[1] = this.skill_pool[1];
+		this.player.skills[2] = this.skill_pool[2];
+		this.player.skills[3] = this.skill_pool[1];
+		this.player.skills[4] = this.skill_pool[2];
+		this.player.skills[5] = this.skill_pool[1];
+		this.player.skills[6] = this.skill_pool[2];
+		this.player.skills[7] = this.skill_pool[1];
+		this.player.skills[8] = this.skill_pool[2];
+		this.player.skills[9] = this.skill_pool[1];
+		this.player.skills[10] = this.skill_pool[2];
+		//start a fight!
+		this.start_fight(new I_Combat(this.player, monsters, undefined));
+	}
 	test_fill_inventory(){
 		var blanks = U.count(this.inventory, undefined);
 		for(var i = 0; i < blanks; i++){
@@ -294,10 +324,15 @@ class game {
 		
 		this.enter_town(data.make_town_by_name("town1"));
 	}
-	game_start_up(){
-		console.log("testing");
-		setTimeout( () => {window.controller.game.test_town();window.controller.game.started = true;window.controller.rerender();}, 100);
+	
+	load_test_case(name){
+		if(name == "town"){
+			this.test_town();
+			this.started = true;
+			global.g.controller.rerender();
+		}
 	}
+
 }
 
 
@@ -311,15 +346,15 @@ export default game;
 	 
 test fight:
 
-window.controller.game.test_fight(); window.controller.game_change();
+global.g.controller.game.test_fight(); global.g.controller.game_change();
 
 
 test fight with full inventory;
 
-window.controller.game.test_fill_inventory(); window.controller.game.test_fight(); window.controller.game_change();
+global.g.controller.game.test_fill_inventory(); global.g.controller.game.test_fight(); global.g.controller.game_change();
 
 test dungeon: 
 
-window.controller.game.test_dungeon();window.controller.rerender();
+global.g.controller.game.test_dungeon();global.g.controller.rerender();
 
 	*/

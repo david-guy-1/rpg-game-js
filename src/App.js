@@ -11,6 +11,7 @@ import D_Dungeon_Info from "./scripts/display/D_Dungeon_Info.js";
 import D_Dungeon_End from "./scripts/display/D_Dungeon_End.js";
 import D_Town from "./scripts/display/D_Town.js";
 import D_Skills from "./scripts/display/D_Skills.js";
+import g from "./config.js";
 // this is the view!
 class App extends React.Component {
 	constructor(props){
@@ -20,6 +21,10 @@ class App extends React.Component {
 		window.controller = this.controller;
 		window.view = this;
 		window.game = this.X;
+		global.g.game = this.X;
+		global.g.view = this;
+		global.g.controller = this.controller; // for when we don't have window.
+		window.global = global;
 		document.addEventListener("mousedown", this.controller.handleClickDown);
 		document.addEventListener("mouseup", this.controller.handleClickUp);
 		document.addEventListener("keydown", this.controller.handleKeyDown);
@@ -131,7 +136,7 @@ class App extends React.Component {
 
 		var game = this.X;
 		if(game.started == false){
-			return <div> Not started </div>;
+			return <div> <input type="text" id="code" /> <button onClick={function(){global.g.game.load_test_case(document.getElementById('code').value)}} id="load_button">Load test </button> </div>;
 		}
 		var state = game.game_state();
 		var stack = this.interface_stack;
@@ -162,11 +167,11 @@ class App extends React.Component {
 		} else if (interface_state == "skills"){
 			return <D_Skills skills={game.skill_pool} equip={game.player.skills} selected_skill = {this.selected_skill} selected_equip ={this.selected_equip_skill} />
 		} 
-		return (<div> nothing {JSON.stringify(game.game_stack)} </div>);
+		return (<div> {JSON.stringify(game.game_stack)} </div>);
 	}
 	
 	componentDidMount(){
-		this.X.game_start_up();
+	//	this.X.game_start_up();
 	}
 
 
