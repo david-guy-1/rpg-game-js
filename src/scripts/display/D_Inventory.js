@@ -33,7 +33,7 @@ class D_Inventory extends React.Component {
 							//render row i, col j at position (width *j, height * i)
 							var d = c.inventory_cols*i+j; // d is item index
 							components.push(<div style={{"position":"absolute", "top":c.inventory_box_width *i,"left":c.inventory_box_height * j}}
-							onClick = {function(){window.view.inv_selected=this;window.controller.rerender()}.bind(d)}>
+							onClick = {function(){global.g.view.inv_selected=this;global.g.controller.rerender()}.bind(d)}>
 							<DC_item_icon item={items[d]} selected={d == selected_item} /> 
 							</div>);
 							}
@@ -51,7 +51,7 @@ class D_Inventory extends React.Component {
 					var components = [];
 					for(var i=0; i<c.equip_items; i++){
 							components.push(<div style={{"position":"absolute", "top":c.inventory_box_width *i,"left":0}}
-							onClick = {function(){window.view.equip_selected=this;window.controller.rerender()}.bind(i)}
+							onClick = {function(){global.g.view.equip_selected=this;global.g.controller.rerender()}.bind(i)}
 							>
 							<DC_item_icon item={equip[i]} selected={i == selected_equip} /> 
 							</div>);
@@ -71,9 +71,9 @@ class D_Inventory extends React.Component {
 		{ equip[selected_equip] ==undefined ? undefined :   <div style={{"position":"absolute", "top":c.equip_details_top_left[1],"left":c.equip_details_top_left[0]}}><DC_item item={equip[selected_equip]}> </DC_item> </div>}
 		
 		{ /*buttons for equipping and going back */}
-		<button style={{"position":"absolute", "top":c.inventory_equip_top_left[1],"left":c.inventory_equip_top_left[0], "width":c.inventory_equip_width, "height":c.inventory_equip_height,"background-color":"lightgreen"}} onClick={function(){window.game.equip_item(window.view.inv_selected, window.view.equip_selected); window.controller.rerender();}}> <h2 style={{"text-align":"center"}} > Equip item</h2></button>
+		<button style={{"position":"absolute", "top":c.inventory_equip_top_left[1],"left":c.inventory_equip_top_left[0], "width":c.inventory_equip_width, "height":c.inventory_equip_height,"background-color":"lightgreen"}} onClick={function(){global.g.game.equip_item(global.g.view.inv_selected, global.g.view.equip_selected); global.g.controller.rerender();}}> <h2 style={{"text-align":"center"}} > Equip item</h2></button>
 		
-		<button style={{"position":"absolute", "top":c.inventory_back_top_left[1],"left":c.inventory_back_top_left[0], "width":c.inventory_back_width, "height":c.inventory_back_height,"background-color":"lightblue"}} onClick={function(){window.view.leave_inventory(); window.controller.rerender();}}> <h2 style={{"text-align":"center"}} > Go back</h2></button>
+		<button style={{"position":"absolute", "top":c.inventory_back_top_left[1],"left":c.inventory_back_top_left[0], "width":c.inventory_back_width, "height":c.inventory_back_height,"background-color":"lightblue"}} onClick={function(){global.g.view.leave_inventory(); global.g.controller.rerender();}}> <h2 style={{"text-align":"center"}} > Go back</h2></button>
 		
 		</div>
 	    );

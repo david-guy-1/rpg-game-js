@@ -16,18 +16,18 @@ class D_Fight_end extends React.Component {
 		this.render = this.render.bind(this);
 	}
 	move_left(){
-		window.game.select_left();
-		window.controller.rerender();
+		global.g.game.select_left();
+		global.g.controller.rerender();
 		
 	}
 	select_item(){
-		window.game.select_item();
-		window.controller.rerender();
+		global.g.game.select_item();
+		global.g.controller.rerender();
 
 	}
 	move_right(){
-		window.game.select_right();
-		window.controller.rerender();
+		global.g.game.select_right();
+		global.g.controller.rerender();
 		
 	}
 	
@@ -37,10 +37,6 @@ class D_Fight_end extends React.Component {
 		var selected = this.props.selected;
 		var inventory_empty = this.props.inventory_empty;
 		//console.log(combat);
-		
-	console.log(chosen);
-	console.log(items);
-	console.log(selected);
 	var c = T.display_constants;
 	return ( 
 	<div>
@@ -103,7 +99,7 @@ class D_Fight_end extends React.Component {
 		}
 	}.bind(this)()
 	}
-	<button style={{"position":"absolute", "top":c.fight_end_back_button_top_left[1],"left":c.fight_end_back_button_top_left[0], width:c.fight_end_buttons_width,height:c.fight_end_buttons_height}} onClick ={function(){window.game.finished_items(); window.controller.rerender()}}> Go back </button>
+	<button style={{"position":"absolute", "top":c.fight_end_back_button_top_left[1],"left":c.fight_end_back_button_top_left[0], width:c.fight_end_buttons_width,height:c.fight_end_buttons_height}} onClick ={function(){global.g.game.finished_items(); global.g.controller.rerender()}}> Go back </button>
 	
 	</div>
 		)

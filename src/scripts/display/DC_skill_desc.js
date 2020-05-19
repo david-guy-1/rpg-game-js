@@ -7,7 +7,7 @@ class DC_skill_desc extends React.Component {
 		this.props = props; // props : item is a single item
 	}
 	render(){
-
+	var c = T.display_constants;
 		var skill= this.props.skill;
 	if(skill == undefined){
 		return <div>error</div>;
@@ -18,11 +18,12 @@ class DC_skill_desc extends React.Component {
 
 	
 	{ /* box */}
-	<div style={{"position":"absolute","border":"1px solid black","width":210,"height":200, "padding":"2px"}}>
-	Damage: +{skill.damage}%  <br />
-	Cooldown: +{skill.cd}  <br />
-	Mana: +{skill.mana}  <br />
-	
+	<div style={{"position":"absolute","border":"1px solid black","width":c.skill_desc_width,"height":c.skill_desc_height, "padding":"2px"}}>
+	<h3>{skill.name}</h3>
+	Damage: {skill.damage}%  <br />
+	Cooldown: {skill.cd}  <br />
+	Mana: {skill.mana}  <br />
+	Delay: {skill.delay}  <br />
 	{skill.description}  <br />	
 	</div>
 	</div>

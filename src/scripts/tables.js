@@ -19,7 +19,7 @@ export var display_constants  = {
 	"monsters_gap":50,
 	
 	// skills (in combat)
-	"skill_width" : 130,
+	"skill_width" : 180,
 	"skill_height" :50,
 	"skill_gap":0,
 	"skill_top_left":[100, 390],
@@ -62,6 +62,7 @@ export var display_constants  = {
 	"fight_end_back_button_top_left":[543,547],
 	"fight_end_buttons_width":60,
 	"fight_end_buttons_height":60,
+	
 	//dungeon description sizes:
 	"dungeon_name_top_left" :[100,50],
 	"dungeon_name_width":500,
@@ -109,18 +110,21 @@ export var display_constants  = {
 	
 	// skills :
 	"skill_names_top_left":[100,100],
-	"skill_table_rows":4,
-	"skill_table_cols":8,
+	"skill_table_rows":3,
+	"skill_table_cols":7,
 	"skill_name_width":70,
 	"skill_name_height":100,
-	"skill_desc_top_left":[650,200],
+	"skill_desc_top_left":[650,60],
+	"skill_desc_equip_top_left":[1000,60],
 	"equipped_skills_top_left":[100,520],
-	"skills_equip_top_left":[645,448],
-	"skills_equip_width":218,
+	"skills_equip_top_left":[462,470],
+	"skills_equip_width":168,
 	"skills_equip_height":87,
-	"skills_back_top_left":[645,563],
-	"skills_back_width":218,
+	"skills_back_top_left":[462,570],
+	"skills_back_width":168,
 	"skills_back_height":87,
+	"skill_desc_width":300,
+	"skill_desc_height":500,
 	
 	
 }

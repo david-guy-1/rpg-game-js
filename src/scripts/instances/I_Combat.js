@@ -3,6 +3,7 @@
 import items from '../classes/item.js';
 import monster from '../classes/monster.js';
 import monster_skill from '../classes/monster_skill.js';
+import * as U from '../utilities.js';
 import compute_attack_pattern from "../logic/attack_patterns.js";
 // I think we should avoid using tables for anything other than initializing. What if we need to generate things dynamically?
 //cloning: always use Object.assign(new monster(), monster_list[i])
@@ -64,6 +65,7 @@ class I_Combat{
 		
 		this.player_effects = [];
 		// extra code goes here, maybe. 
+		this.cooldowns = U.fillArray(0, 10);  // index -> number of ticks
 		
 	}
 
@@ -105,15 +107,20 @@ class I_Combat{
 		return undefined;
 	}
 	
-	does_attack_succeed(attack_name, target_monster){
+	does_attack_succeed(attack_index, target_monster){ 
+			var attack = this.player.skills[attack_index]
+			var attack_name = attack.name;
+			
 			var undead_only_attacks = ["smite undead"]
 			var has_effect = this.has_effect.bind(this)
 			
-			if(target_monster.has_flag("undead") == false && undead_only_attacks.indexOf(attack_name) != -1){ // undead only on a non-undead.
+			// undead only on a non-undead.
+			if(target_monster.has_flag("undead") == false && undead_only_attacks.indexOf(attack_name) != -1){ 
 				return false; 
 			}
+			
 			//cooldown
-			if(has_effect("player", attack_name + " cd")){
+			if(this.cooldowns[attack_index] != 0 ){
 				return false;
 			}
 			
@@ -131,7 +138,9 @@ class I_Combat{
 			
 	}
 	
-	 calculate_damage_p2m(attack, target_monster){
+	 calculate_damage_p2m(attack_index, target_monster){ 
+			var attack = this.player.skills[attack_index]
+			var attack_name = attack.name;
 			var tentative_damage = attack.damageMult*this.player_attack;
 				
 				
@@ -152,8 +161,11 @@ class I_Combat{
 				}
 			return tentative_damage;
 	}
-	 calculate_cd_p2m(attack, target_monster){
-				var tentative_cd = attack.cd; 				
+	// "global" cooldown
+	 calculate_delay_p2m(attack_index, target_monster){ 
+				var attack = this.player.skills[attack_index]
+				var attack_name = attack.name;
+				var tentative_delay = attack.delay; 				
 				// go through every player effect and see if that changes damage dealt.
 				
 				for(var i=0;i<this.player_effects.length;i++){
@@ -161,8 +173,29 @@ class I_Combat{
 					
 					// (player's) effects, well , effect starts here.
 					if(effect.name == "speed_mult"){
-						tentative_cd *= effect.strength;
+						tentative_delay *= effect.strength;
 					}
+				}
+				
+				// same for monster
+				for(var i=0;i<target_monster.effects.length;i++){
+					var effect = target_monster.effects[i];	
+					// (monster's) effects, well , effect starts here.
+				}
+			return tentative_delay;	
+	}
+	//cooldown for that one ability
+	calculate_cd_p2m(attack_index, target_monster){ 
+			var attack = this.player.skills[attack_index]
+			var attack_name = attack.name;
+			var tentative_cd = attack.cd; 				
+				// go through every player effect and see if that changes cooldown.
+				
+				for(var i=0;i<this.player_effects.length;i++){
+					var effect = this.player_effects[i];
+					
+					// (player's) effects, well , effect starts here.
+
 				}
 				
 				// same for monster
@@ -173,7 +206,10 @@ class I_Combat{
 			return tentative_cd;	
 	}
 	
-	 apply_effects_p2m(attack, target_monster){
+	
+	 apply_effects_p2m(attack_index, target_monster){ 
+		var attack = this.player.skills[attack_index]
+		var attack_name = attack.name;
 		//self 
 		for(var i=0; i<attack.self_effects.length;i++){
 			var effect = attack.self_effects[i]
@@ -199,8 +235,9 @@ class I_Combat{
 		// extra code goes here!
 	}
 	
+	//attack is a monster_skill instance, since there are no indices for monste skills
 	//target_index is either "player", or the index of a monster
-	 does_monster_attack_succeed(attack_name, target_index){  
+	 does_monster_attack_succeed(attack, target_index){  
 		var has_effect = this.has_effect.bind(this)
 		
 		if(has_effect("player", "immune")){
@@ -290,9 +327,7 @@ class I_Combat{
 		this.fought_monsters.push(monster);
 
 		this.fighting_monsters.splice(monster_index,1);
-		if(this.fighting_monsters.length == 0){
-			this.fight_end("player wins");
-		}
+
 	}
 	 fight_tick(){
 	//	console.log("tick");
@@ -315,7 +350,7 @@ class I_Combat{
 			var target_monster = this.fighting_monsters[player_queued["target"]]; // this is an actual monster instance
 			var attack = player_queued["skill"]; //this is NOT just the name
 			
-			var attack_succeeds = this.does_attack_succeed(attack.name, target_monster);
+			var attack_succeeds = this.does_attack_succeed(this.currently_queued_attack, target_monster);
 			
 			
 			// attacks can go wrong;
@@ -325,11 +360,12 @@ class I_Combat{
 				
 				//calculate the damage it does:
 				
-				var damage = this.calculate_damage_p2m(attack, target_monster)
-				var cd = this.calculate_cd_p2m(attack, target_monster)
+				var damage = this.calculate_damage_p2m(this.currently_queued_attack, target_monster)
+				var cd = this.calculate_delay_p2m(this.currently_queued_attack, target_monster)
+				this.cooldowns[this.currently_queued_attack] = this.calculate_cd_p2m(this.currently_queued_attack, target_monster);
 				this.player_current_cd = Math.floor(cd);
 				target_monster.hp -= Math.floor(damage);
-				this.apply_effects_p2m(attack, target_monster);
+				this.apply_effects_p2m(this.currently_queued_attack, target_monster);
 
 					
 			}
@@ -372,6 +408,13 @@ class I_Combat{
 		}
 		// end of turn effects--------------------	    
 
+		//first, cooldowns;
+		for(var i=0; i<10; i++){	
+			this.cooldowns[i] = this.cooldowns[i] -= 1;
+			if(this.cooldowns[i] < 0){
+				this.cooldowns[i] = 0;
+			}
+		}
 		// handle all effects, backwards so that removing effects doesn't mess up rest of the list.
 		
 		for(var i=this.player_effects.length-1;i>=0;i--){
@@ -417,8 +460,11 @@ class I_Combat{
 				this.monster_death(k);
 			}
 		}
-		
-
+		//fight end
+		if(this.fighting_monsters.length == 0){
+			 // if ...
+			this.fight_end("player wins");
+		}
 		
 		// cooldowns go down
 		for (var k=0;k<fighting_monsters.length; k++){

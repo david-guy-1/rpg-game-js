@@ -45,7 +45,9 @@ class D_Combat extends React.Component {
 				var components = [];
 				for(var i=0; i<10; i++){
 					if(combat.player.skills[i] != undefined){
-						components.push(<div onClick = {function(){combat.currently_queued_attack = this}.bind(i)}><DC_skill key={i} id={i} skill={combat.player.skills[i]}  selected={combat.currently_queued_attack == i}/></div>);
+						// not on cooldown
+							components.push(<div onClick = {function(){combat.currently_queued_attack = this}.bind(i)}><DC_skill key={i} id={i} skill={combat.player.skills[i]}  selected={combat.currently_queued_attack == i} cooldown={combat.cooldowns[i]}/></div>);
+						
 					}
 				}
 				return components;
