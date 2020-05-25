@@ -11,6 +11,7 @@ class D_Fight_end extends React.Component {
 		// "selected" is the index of the currently selected item (the one being displayed).
 		// chosen is an array of booleans indicating which items are selected for taking
 		// inventory_empty is the number of empty inventory slots
+
 		// "currency" is an object representing the currency gained.
 		this.move_left = this.move_left.bind(this);
 		this.move_right = this.move_right.bind(this);
@@ -81,6 +82,7 @@ class D_Fight_end extends React.Component {
 	Currency obtained: <br />
 	<DC_currency currency={currency} />
 	</div>
+
 
 	{	
 		// warning if inventory is full

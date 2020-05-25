@@ -38,6 +38,7 @@ class game {
 		this.progress = {} // record completed dungeons, etc. 
 		this.quests = []; // record quests completed
 		this.currency = {"gold":0}; // record amount of money of different types.
+
 	}
 	// utilities:
 	game_state(){
@@ -111,6 +112,7 @@ class game {
 		this.game_stack.push({"name":"player loses"});
 	}
 	// fight end commands:
+	
 	start_fight_end(items, currency){
 		U.addObject(this.currency, currency);
 		this.game_stack.push({"name":"fight end", items_dropped : items, "chosen": U.fillArray(true, items.length), "selected":0, currency:currency})
@@ -136,6 +138,7 @@ class game {
 	
 	finished_items(){
 		var frame_ = this.game_state();
+
 		var items_collected = [];
 		// first, give the player the items.
 		for(var i=0; i<frame_.items_dropped.length; i++){
@@ -170,6 +173,7 @@ class game {
 		//do NOT mutate the dungeon at all. note that combat clones the monsters, so we can call it.
 		this.game_stack.push({name:"dungeon", "dungeon_instance":new I_Dungeon(dungeon), "dismissed":false});
 		dm.dungeon_begin(this.game_state().dungeon_instance,this.progress);
+
 		qm.dungeon_entered(this.quests, dungeon);
 	}
 	dismiss(){
@@ -221,6 +225,7 @@ class game {
 					this.start_fight(new I_Combat(this.player, entity.monsters, d));
 				}
 				if(entity.type == "item"){
+
 					this.start_fight_end(entity.items, entity.currency);
 				}
 			}

@@ -65,7 +65,7 @@ export var display_constants  = {
 	
 	"fight_end_currency_top_left" : [781, 104],
 	
-	
+
 	//dungeon description sizes:
 	"dungeon_name_top_left" :[100,50],
 	"dungeon_name_width":500,
@@ -156,8 +156,10 @@ export var images_lst = { // images for all things: monsters, items, etc.
 
 export var town_data = { // name of town -> object with keys  : image, dungeons,shops,quest_takers
 	// image is a name, other 3 are quadruples indicating coordinates of rectangles we can click on. tlx, tly, brx, bry
+
 	"town1": {"image":"town1.jpg", "rectangles":[[170,230,394,418, "blue"],[402,100,638,401, "green"],[846,169,1060,417, "red"]]},
 	"town2": {"image":"town2.jpg", "rectangles":[[137,380,234,470, "blue"],[868,249,1067,427, "green"]]}
+
 }
 
 export var instructions_text = {"fight":"asdfgzxcvb: select attack, 12345: select enemy. you cannot run",

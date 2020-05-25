@@ -224,6 +224,7 @@ export function fillArray(value, len) {
   return [value].concat(fillArray(value, len-1));
 
 }
+
 // adds object 2 to object 1, mutates object 1
 export function addObject(obj1, obj2){
 	console.log("adding")
@@ -239,6 +240,7 @@ export function addObject(obj1, obj2){
 		}
 	})
 }
+
 // canvas 
 
 

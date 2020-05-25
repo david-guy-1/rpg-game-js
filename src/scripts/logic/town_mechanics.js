@@ -12,6 +12,7 @@ export function town_click(town, progress, index){
 	
 	// if type is "fight", then there must be a list of monsters in the key "monsters"
 	
+
 	// if type is "quest giver" then there must be a name of a quest giver in the key "name";
 	
 	// town1, no items

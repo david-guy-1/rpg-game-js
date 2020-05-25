@@ -1,4 +1,5 @@
-//store all variables in dungeon instance.
+
+﻿//store all variables in dungeon instance.
 import dungeon_entity from "../classes/dungeon_entity.js";
 import monster from "../classes/monster.js";
 import item from "../classes/item.js";

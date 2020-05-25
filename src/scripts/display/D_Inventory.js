@@ -3,6 +3,7 @@ import * as U from "../utilities.js";
 import * as T from "../tables.js";
 import DC_item_icon from "./DC_item_icon.js";
 import DC_currency from "./DC_currency.js";
+
 import DC_item from "./DC_item.js";
 
 class D_Inventory extends React.Component {
@@ -77,6 +78,7 @@ class D_Inventory extends React.Component {
 		
 		<button style={{"position":"absolute", "top":c.inventory_back_top_left[1],"left":c.inventory_back_top_left[0], "width":c.inventory_back_width, "height":c.inventory_back_height,"background-color":"lightblue"}} onClick={function(){global.g.view.leave_inventory(); global.g.controller.rerender();}}> <h2 style={{"text-align":"center"}} > Go back</h2></button>
 		
+
 		
 		 { /*currency */}
 		 

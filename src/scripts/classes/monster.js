@@ -1,4 +1,5 @@
 class monster{
+
     constructor(name,attack,defense,hp,flags,attack_pattern,drops, currency_drops){
         this.name = name;
         this.attack = attack;
@@ -12,7 +13,6 @@ class monster{
 		this.currency_drops = currency_drops; // currency drops list
 		this.current_cd = 0;
 		
-
     }
 	has_flag(flag_name){
 		return this.flags.indexOf(flag_name) != -1

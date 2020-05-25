@@ -97,7 +97,6 @@ export function make_skills(){
 
 
 
-
 export function make_town_by_name(name){
 	return new town(name, T.town_data[name].rectangles); 
 }
