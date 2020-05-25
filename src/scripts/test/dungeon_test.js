@@ -198,6 +198,7 @@ describe("load Dungeon", function() {
 					assert.strictEqual(game.inventory[1].name , "sword of undead fighting");
 				    assert.strictEqual(game.inventory[2].name , "ring of health");
 					assert.strictEqual(game.progress.town1_items, true);
+					assert.strictEqual(game.currency.gold, 12); // 12 gold from the item stash in town
 				});
 				
 
@@ -258,6 +259,11 @@ describe("load Dungeon", function() {
 				await browser.executeScript("return window.game.game_state()").then((state) =>  assert.strictEqual(state.name, "dungeon"));
 				//but view stack should be inventory
 				await browser.executeScript("return window.view.interface_stack").then((state) =>  assert.deepStrictEqual(state, ["game", "inventory"]));
+				
+				// check how much gold we have
+				await browser.findElement({ xpath: "//li[text()[contains(., \"gold\")]]" }).then((x) => x.getText()).then(function(x){
+					assert.strictEqual("gold : "  + (12), x);
+				});
 				
 				// now let's equip items
 				for(var i=0; i<3;i++){
@@ -387,6 +393,8 @@ describe("load Dungeon", function() {
 					assert.strictEqual(state.dungeon_instance.entities.length, 3)
 					//check that boss has been added
 					assert.strictEqual(state.dungeon_instance.added_boss, true);
+					// check currency
+					assert.strictEqual(game.currency.gold, 10+32+1+12); 
 				});
 				
 				resolve(1);
@@ -418,13 +426,35 @@ describe("load Dungeon", function() {
 			//don't take the item, it's useless		
 			await press("q");
 			await press(" ");
-			await browser.executeScript("return window.game").then(function(x){ assert.strictEqual(x.inventory[1], null)});
+			await browser.executeScript("return window.game").then(function(x){ 
+				assert.strictEqual(x.inventory[1], null);
+				//but we should still have the gold
+				assert.strictEqual(x.currency.gold, 10+32+1+12+212); 
+			});
 			await browser.executeScript("return window.game.game_state()").then(function(x){ assert.strictEqual(x.name, "dungeon")});
 			resolve(1);
 		});
 	})
 	
-
+	it("Should be able to open the inventory and see how much gold I have", function(){ 
+		this.timeout(0);
+		return new Promise(async function(resolve, reject) {
+				// click the inventory
+				await browser.findElement({ xpath: "//h2[text()[contains(., \"Inventory\")]]" }).then((x) => x.click());
+				
+				// find the amount of gold 
+				await browser.findElement({ xpath: "//li[text()[contains(., \"gold\")]]" }).then((x) => x.getText()).then(function(x){
+					assert.strictEqual("gold : "  + (10+32+1+12+212), x);
+				});
+				
+				// leave inventory
+				
+				await press(" ");
+				resolve(1);
+		});
+	});
+	
+	
 	it("Should be able to clear the rest of the dungeon", function(){
 		this.timeout(0);
 		return new Promise(async function(resolve, reject) {
@@ -452,8 +482,14 @@ describe("load Dungeon", function() {
 				// more assertions
 				
 				await browser.executeScript("return window.game.game_state()").then(function(state){
-					// 1 entity left
-					assert.strictEqual(state.dungeon_instance.entities.length, 0)
+					// dungeon cleared!
+					assert.strictEqual(state.dungeon_instance.entities.length, 0);
+					
+				});
+				await browser.executeScript("return window.game").then(function(game){
+					// check for gold one last time
+					assert.strictEqual(game.currency.gold, 10+32+1+12+212+100+1); 
+					
 				});
 				
 				resolve(1);

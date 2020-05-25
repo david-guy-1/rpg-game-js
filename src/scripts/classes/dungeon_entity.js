@@ -5,7 +5,7 @@ class dungeon_entity{// rows, cols, entities_table, player_start_x, player_start
 		U.assert(["monster", "item"].indexOf(type) != -1);
 		
 		// if monster : list of monsters 
-		// if item : list of items
+		// if item : object with keys "items", "currency". "items is a list of items, and "currency" is an object of currency to gain
 		// if lock: nothing (no need for corresponding key, it will automatically be set)
 		// if key : corresponding lock
 		switch (type){
@@ -13,7 +13,8 @@ class dungeon_entity{// rows, cols, entities_table, player_start_x, player_start
 				this.monsters = data;
 			break;
 			case "item":
-				this.items = data;
+				this.items = data.items;
+				this.currency = data.currency
 			break;
 
 			default:

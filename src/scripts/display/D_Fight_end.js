@@ -2,6 +2,7 @@ import React from 'react';
 import * as U from "../utilities.js";
 import * as T from "../tables.js";
 import DC_item from "./DC_item.js";
+import DC_currency from "./DC_currency.js";
 import DC_item_icon from "./DC_item_icon.js";
 class D_Fight_end extends React.Component {
 	constructor(props){
@@ -10,6 +11,7 @@ class D_Fight_end extends React.Component {
 		// "selected" is the index of the currently selected item (the one being displayed).
 		// chosen is an array of booleans indicating which items are selected for taking
 		// inventory_empty is the number of empty inventory slots
+		// "currency" is an object representing the currency gained.
 		this.move_left = this.move_left.bind(this);
 		this.move_right = this.move_right.bind(this);
 		this.select_item = this.select_item.bind(this);
@@ -34,6 +36,7 @@ class D_Fight_end extends React.Component {
 	render(){
 		var chosen = this.props.chosen;
 		var items = this.props.items;
+		var currency =this.props.currency;
 		var selected = this.props.selected;
 		var inventory_empty = this.props.inventory_empty;
 		//console.log(combat);
@@ -73,6 +76,12 @@ class D_Fight_end extends React.Component {
 	{/* whether or not an item is chosen */}	
 	<h1 id="chosen_indicator" style={{"position":"absolute","top":c.fight_end_chosen_indicator_top_left[1],"left":c.fight_end_chosen_indicator_top_left[0],"width":c.fight_end_chosen_indicator_width}}>{ chosen[selected] ? "chosen" : "not chosen"}</h1>
 	
+	{/* currency gained */}
+	<div style= {{"position":"absolute","top":c.fight_end_currency_top_left[1],"left":c.fight_end_currency_top_left[0]  }}>
+	Currency obtained: <br />
+	<DC_currency currency={currency} />
+	</div>
+
 	{	
 		// warning if inventory is full
 	function(){

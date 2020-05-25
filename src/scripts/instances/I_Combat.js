@@ -11,12 +11,14 @@ class I_Combat{
 	constructor(player, monster_list, dungeon){ // does not mutate these
 		this.player = player;
 		this.fighting_monsters = [];
+		this.monster_list = monster_list; // not mutated!!!
 		this.dungeon = dungeon; // this can be undefined
 		for(var i=0; i<monster_list.length; i++){
 			this.fighting_monsters.push(Object.assign(new monster(), monster_list[i]));
 		} // safe to mutate monsters, but not player.
 		this.fought_monsters = []; 
 		this.items_dropped = [];
+		this.currency_dropped = {};
 		this.currently_queued_attack = 0; // is the attack that is currently queued
 	    this.currently_attacking_monster = 0; // currently attacking monster
 	    this.current_ticks = 0; // number of ticks so far
@@ -324,8 +326,9 @@ class I_Combat{
 		var monster = this.fighting_monsters[monster_index];
 		// items dropped
 		this.items_dropped = this.items_dropped.concat(monster.drops);
+		U.addObject(this.currency_dropped, monster.currency_drops);
 		this.fought_monsters.push(monster);
-
+		// remove the monster
 		this.fighting_monsters.splice(monster_index,1);
 
 	}

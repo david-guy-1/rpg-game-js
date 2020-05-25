@@ -12,15 +12,28 @@ export function town_click(town, progress, index){
 	
 	// if type is "fight", then there must be a list of monsters in the key "monsters"
 	
+	// if type is "quest giver" then there must be a name of a quest giver in the key "name";
+	
 	// town1, no items
-	if(town.name == "town1" && index == 0 && progress.town1_items == undefined){
-		progress.town1_items = true;
-		return {type:"item", items:data.make_items()};
+	if(town.name == "town1"){		
+		if(index == 0 && progress.town1_items == undefined){
+			progress.town1_items = true;
+			return {type:"item", items:data.make_items(), currency:{"gold":12}};
+		}
+		if(index == 2 && progress.town1_dungeon == undefined){
+			progress.town1_dungeon = true;
+			return {type:"dungeon", dungeon:data.make_dungeon_2()};
+		}
 	}
 	
-	if(town.name == "town1" && index == 2 && progress.town1_dungeon == undefined){
-		progress.town1_dungeon = true;
-		return {type:"dungeon", dungeon:data.make_dungeon_2()};
+	// town 2 : can keep on fighting
+	if(town.name == "town2"){
+		if(index == 0){
+			return {type:"quest giver", name:"quester1"}
+		}
+		if(index == 1){
+			return {type:"fight", monsters : [data.make_weak_monster()]};
+		}
 	}
 	return {type:"nothing"};
 }

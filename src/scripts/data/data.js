@@ -22,19 +22,21 @@ export function useless_item(){
 	return new item("useless item", 0, 0, 0, 0, "A completely useless item");
 }
 export function make_monsters(){
-		var monster1 = new monster("goblin", 1000, 0,10000, [], "",[] );
+		var monster1 = new monster("goblin", 1000, 0,10000, [], "",[] , {"gold":10});
 		var itemDrop1 = useless_item();
-		var monster2 = new monster("test_skeleton", 2000, 0,12000000, ['undead'],"" , [itemDrop1] )
-		var monster3 = new monster("test", 0, 0,2000, [],"", [] );
+		var monster2 = new monster("test_skeleton", 2000, 0,12000000, ['undead'],"" , [itemDrop1] , {"gold":32})
+		var monster3 = new monster("test", 0, 0,2000, [],"", [],{} );
 		var monster4 = monster_generator(1.1, 1,1,1,[],"poison attack");
 		return [monster1, monster2, monster3, monster4]
 }
-
+export function make_weak_monster(){
+	return new monster("goblin", 10, 0, 2000, [], "", [], []);
+}
 // a "tutorial" dungeon with keys, a chest, a generated monster, and a boss
 export function make_dungeon(){
-		var item_entity = new dungeon_entity("item", [useless_item()]);		
+		var item_entity = new dungeon_entity("item", {"items":[useless_item()], "currency":{gold:23} });		
 		var monster_entity = new dungeon_entity("monster", make_monsters());
-		var monster_entity2 = new dungeon_entity("monster", [make_monsters()[3]]);
+		var monster_entity2 = new dungeon_entity("monster", [make_monsters()[3]]); // generated monster 
 		var monster_entity3 = new dungeon_entity("monster", []);
 		
 		var dungeon_inst = new dungeon("Tutorial Dungeon" , `<ul>
@@ -60,8 +62,9 @@ export function make_dungeon(){
 //same as dungeon 1, but useless item
 export function make_dungeon_2(){
 	var dungeon_inst = make_dungeon();
+	// remove the original entity and replace it with a new one
 	dungeon_inst.entities.splice(0, 1);
-	var item_entity = new dungeon_entity("item", [useless_item()])
+	var item_entity = new dungeon_entity("item", {items:[useless_item()], "currency":{"gold":212}})
 	dungeon_inst.entities.push([1,1,item_entity]);
 	return dungeon_inst;
 }	
@@ -93,9 +96,7 @@ export function make_skills(){
 }
 
 
-export function make_town(){
-	return new town("town1", [make_dungeon()], [], []);
-}
+
 
 export function make_town_by_name(name){
 	return new town(name, T.town_data[name].rectangles); 

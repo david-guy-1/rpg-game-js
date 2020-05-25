@@ -3,6 +3,8 @@ What should a "town" class contain?
 
 - name (might be used to choose which image to display, where buttons go, etc, however, that's part of the display and we don't have it here)
 
+see "town_mechanics.js" for what happens when a button is clicked
+ 
 */
 // "rectangles" are quintuples ("tlx, tly, brx, bry, color")
 class town{

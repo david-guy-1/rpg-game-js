@@ -14,6 +14,8 @@ import * as U from '../utilities.js';
 import monster_generator from '../generators/G_Monster.js';
 import * as data from "../data/data.js";
 import * as tm from "../logic/town_mechanics.js" 
+import * as qm from "../logic/quest_mechanics.js";
+import * as qgm from "../logic/quest_giver_mechanics.js";
 // might need more imports
 
 //game should not call any controller methods, at all
@@ -34,7 +36,8 @@ class game {
 		this.player = new playerC(5, 10, 1000, 1000, U.fillArray(undefined, 6), []);
 		this.started = false;
 		this.progress = {} // record completed dungeons, etc. 
-		
+		this.quests = []; // record quests completed
+		this.currency = {"gold":0}; // record amount of money of different types.
 	}
 	// utilities:
 	game_state(){
@@ -93,9 +96,9 @@ class game {
 			// player wins
 			if(inst.fight_result == "player wins"){
 				var items_dropped = inst.items_dropped;
-				this.start_fight_end(items_dropped);
-				
-				
+				this.start_fight_end(items_dropped,inst.currency_dropped);
+				// fight win methods go here.
+				qm.fight_ended(this.quests, inst.monster_list);
 			}
 			// player loses. 
 			else if (inst.fight_result == "player loses"){
@@ -108,8 +111,9 @@ class game {
 		this.game_stack.push({"name":"player loses"});
 	}
 	// fight end commands:
-	start_fight_end(items){
-		this.game_stack.push({"name":"fight end", items_dropped : items, "chosen": U.fillArray(true, items.length), "selected":0})
+	start_fight_end(items, currency){
+		U.addObject(this.currency, currency);
+		this.game_stack.push({"name":"fight end", items_dropped : items, "chosen": U.fillArray(true, items.length), "selected":0, currency:currency})
 	}
 	select_item(){
 		var frame_ = this.game_state();
@@ -132,13 +136,20 @@ class game {
 	
 	finished_items(){
 		var frame_ = this.game_state();
+		var items_collected = [];
+		// first, give the player the items.
 		for(var i=0; i<frame_.items_dropped.length; i++){
 			if(frame_.chosen[i]){
 				this.give_item(frame_.items_dropped[i]);
+				items_collected.push(frame_.items_dropped[i]);
 			}
 		}
+		//then call functions related to getting items
+		
+		//quests
+		qm.items_obtained(this.quests, items_collected);
 		var type = this.get_frame_with_name("fighting"); // fight or chest?
-		var di = this.get_frame_with_name("dungeon");
+		var di = this.get_frame_with_name("dungeon"); // get the dungeon if there is one
 		
 		if(di != undefined){ // if there is a dungeon, call the relevant functions
 			di = di.dungeon_instance;
@@ -159,6 +170,7 @@ class game {
 		//do NOT mutate the dungeon at all. note that combat clones the monsters, so we can call it.
 		this.game_stack.push({name:"dungeon", "dungeon_instance":new I_Dungeon(dungeon), "dismissed":false});
 		dm.dungeon_begin(this.game_state().dungeon_instance,this.progress);
+		qm.dungeon_entered(this.quests, dungeon);
 	}
 	dismiss(){
 		this.game_state().dismissed = true;
@@ -209,7 +221,7 @@ class game {
 					this.start_fight(new I_Combat(this.player, entity.monsters, d));
 				}
 				if(entity.type == "item"){
-					this.start_fight_end(entity.items);
+					this.start_fight_end(entity.items, entity.currency);
 				}
 			}
 			if(d.key_on() != undefined){
@@ -218,6 +230,7 @@ class game {
 			}
 			if(dm.dungeon_end(d,this.progress) && this.game_state().name== "dungeon"){
 				this.game_stack[this.game_stack.length-1].name = "dungeon end"; // leave dungeon
+				qm.dungeon_finished(this.game_state().dungeon_instance);
 			}
 		}
 	}
@@ -232,19 +245,24 @@ class game {
 		if(output.type == "dungeon"){
 			this.enter_dungeon(output.dungeon);
 		} else if (output.type == "item"){
-			this.start_fight_end(output.items);
+			this.start_fight_end(output.items, output.currency);
 		} else if (output.type == "fight"){
 			this.start_fight(new I_Combat(this.player, output.monsters, undefined));
+		} else if(output.type == "quest giver"){
+			this.start_quest_giver(output.name);
 		}
+	}
+	//quest commands
+	start_quest_giver(name){
+		
+		//TODO: THIS IS TEMPORARY!!!!
+		var quests = qgm.decide_quests(name, this.progress);
+		this.quests = this.quests.concat(quests);
+		alert(JSON.stringify(window.game.quests));
 	}
 	//shop commands 
 	
 	enter_shop(shop){
-		alert("not implemented");
-	}
-	
-	// quest giver commands
-	enter_quest_giver(){
 		alert("not implemented");
 	}
 	
@@ -260,14 +278,14 @@ class game {
 		var item1 = new item("enchanted sword", 1000, 0, 0, 0, "A sword that does a ton of damage");
 		var item2 = new item("sword of undead fighting", 3, 0, 0,0, "Must be equipped to use the smite undead skill");
 
-		var monster1 = new monster("goblin", 10, 0,100, [], "",[] );
-		var monster2 = new monster("skeleton", 20, 0,2000, ['undead'],"" , [item1, item2] )
-		var monster3 = new monster("test", 0, 0,2000, [],"", [] );
+		var monster1 = new monster("goblin", 10, 0,100, [], "",[] , {"gold":10});
+		var monster2 = new monster("skeleton", 20, 0,2000, ['undead'],"" , [item1, item2] , {})
+		var monster3 = new monster("test", 0, 0,2000, [],"", [], {"gold":31} );
 		 monster1.effects.push(new effect("alice", 100, 10, "monster", []));
 		monster3.hp = 1000;
 		
-		var monster4 = new monster("test", 0, 0,2000, [],"", [] );
-		var monster5 = new monster("test", 0, 0,2000, [],"", [] );
+		var monster4 = new monster("test", 0, 0,2000, [],"", [] , {"gold":25});
+		var monster5 = new monster("test", 0, 0,2000, [],"", [] , {"gold":12});
 		
 		var inst = new I_Combat(this.player, [monster1, monster2,monster3, monster4, monster5], []);
 		this.player.hp = 9999999;
@@ -324,13 +342,23 @@ class game {
 		
 		this.enter_town(data.make_town_by_name("town1"));
 	}
-	
+	test_town_quest(){
+		var items = data.make_items();
+		var skills = data.make_skills();
+		this.player.items[0] = items[0];
+		this.player.skills[0] = skills[0];
+		this.enter_town(data.make_town_by_name("town2"));
+	}
 	load_test_case(name){
 		if(name == "town"){
 			this.test_town();
-			this.started = true;
-			global.g.controller.rerender();
+			
 		}
+		if(name == "town2"){
+			this.test_town_quest();
+		}
+		this.started = true;
+		global.g.controller.rerender();
 	}
 
 }

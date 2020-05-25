@@ -16,7 +16,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "s-test": "mocha src/scripts/test",
+    "dungeon_test": "mocha src/scripts/test/dungeon_test.js",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

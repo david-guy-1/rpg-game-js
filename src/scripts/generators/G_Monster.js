@@ -9,7 +9,8 @@ function monster_generator(difficulty, attack_adjust = 1, defense_adjust = 1, hp
 		difficulty*2000 * hp_adjust,//hp
 		flags,//flags
 		attack_pattern,//attack_pattern
-		[]//drops
+		[],//drops
+		{"gold":Math.floor(difficulty*1.24)} // currency_drops
 	)
 }
 

@@ -218,12 +218,27 @@ export function assert(condition){
 		throw new AssertionError(condition.toString());
 	}
 }
+// fill array with this value
 export function fillArray(value, len) {
   if (len == 0) return [];
   return [value].concat(fillArray(value, len-1));
 
 }
-
+// adds object 2 to object 1, mutates object 1
+export function addObject(obj1, obj2){
+	console.log("adding")
+	console.log(obj1, obj2)
+	if(typeof(obj1) != "object" || typeof(obj2) != "object"){
+			throw "addObject for non-objects"
+	}
+	Object.keys(obj2).forEach(function(key){
+		if(obj1[key]== undefined){
+			obj1[key] = obj2[key];
+		} else {
+			obj1[key] += obj2[key];
+		}
+	})
+}
 // canvas 
 
 

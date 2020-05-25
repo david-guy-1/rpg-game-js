@@ -148,7 +148,7 @@ class App extends React.Component {
 			if(state.name == "fighting"){
 				return (<D_Combat combat={ state.combat_instance }/>);			
 			} else if (state.name == "fight end"){
-				return <D_Fight_end items={state.items_dropped} selected={state.selected} chosen = {state.chosen} inventory_empty = {U.count(game.inventory, undefined)}/>
+			return <D_Fight_end items={state.items_dropped} selected={state.selected} chosen = {state.chosen} inventory_empty = {U.count(game.inventory, undefined)} currency={state.currency}/>
 			} else if (state.name == "dungeon"){
 				if(state.dismissed == false){
 					return <D_Dungeon_Info dungeon_instance={state.dungeon_instance}/>
@@ -163,7 +163,7 @@ class App extends React.Component {
 				return <D_Town town={state.town}/>
 			}
 		} else if (interface_state == "inventory"){
-			return <D_Inventory items={game.inventory} equip={game.player.items} selected_item = {this.inv_selected} selected_equip ={this.equip_selected} />
+		return <D_Inventory items={game.inventory} equip={game.player.items} selected_item = {this.inv_selected} selected_equip ={this.equip_selected} currency = {game.currency}/>
 		} else if (interface_state == "skills"){
 			return <D_Skills skills={game.skill_pool} equip={game.player.skills} selected_skill = {this.selected_skill} selected_equip ={this.selected_equip_skill} />
 		} 
