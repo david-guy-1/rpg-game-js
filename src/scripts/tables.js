@@ -130,7 +130,13 @@ export var display_constants  = {
 	"skill_desc_width":300,
 	"skill_desc_height":500,
 	
+	"quest_display_top_left":[100,100],
+	"quest_display_width":500,
+	"quest_display_height":400,
 	
+	"quest_display_completed_top_left":[700,100],
+	"quest_display_completed_width":500,
+	"quest_display_completed_height":400,
 }
 
 export var images_lst = { // images for all things: monsters, items, etc.
@@ -154,13 +160,21 @@ export var images_lst = { // images for all things: monsters, items, etc.
 	
 }
 
-export var town_data = { // name of town -> object with keys  : image, dungeons,shops,quest_takers
-	// image is a name, other 3 are quadruples indicating coordinates of rectangles we can click on. tlx, tly, brx, bry
+export var town_data = { // name of town -> object with keys  : image, rectangles
+	// image is a name, other 3 are 5-tuples indicating coordinates of rectangles we can click on. tlx, tly, brx, bry, color
 
 	"town1": {"image":"town1.jpg", "rectangles":[[170,230,394,418, "blue"],[402,100,638,401, "green"],[846,169,1060,417, "red"]]},
 	"town2": {"image":"town2.jpg", "rectangles":[[137,380,234,470, "blue"],[868,249,1067,427, "green"]]}
 
 }
+
+
+export var quest_giver_data = { // name of quest giver -> object with keys  : image, location of quest box, (tlx, tly, brx, bry)
+
+	"quester1": {"image":"quest_giver1.jpg", "location":[210,128,600,416]},
+
+}
+
 
 export var instructions_text = {"fight":"asdfgzxcvb: select attack, 12345: select enemy. you cannot run",
 "dungeon":"wasd : move, q : go to inventory, e : go to skills, space : see description",
@@ -169,6 +183,7 @@ export var instructions_text = {"fight":"asdfgzxcvb: select attack, 12345: selec
 "overworld":"wasd : move, z : go to skills, i : go to inventory",
 "fight end":"as : scroll, q : toggle chosen, space: go back",
 "town":"click on things.",
+"instructions_text" : "Accept quests, space bar  to exit",
 
  }
  

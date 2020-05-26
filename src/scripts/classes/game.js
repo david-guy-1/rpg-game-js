@@ -36,7 +36,7 @@ class game {
 		this.player = new playerC(5, 10, 1000, 1000, U.fillArray(undefined, 6), []);
 		this.started = false;
 		this.progress = {} // record completed dungeons, etc. 
-		this.quests = []; // record quests completed
+		this.quests = []; // record quests (both completed and in progress)
 		this.currency = {"gold":0}; // record amount of money of different types.
 
 	}
@@ -83,6 +83,16 @@ class game {
 			player.skills[y] = skill;			
 		}
 	}
+	has_quest(name){ //does the player have a quest with this name? (includes completed)
+		var found = false;
+		this.quests.forEach(function(x){
+			if(x.name == name){
+				found = true;
+			}
+		})
+		return found;
+	}
+
 	// fight commands:
 	start_fight(combat_instance){
 		this.game_stack.push({name :"fighting",combat_instance :combat_instance});
@@ -259,11 +269,17 @@ class game {
 	}
 	//quest commands
 	start_quest_giver(name){
-		
-		//TODO: THIS IS TEMPORARY!!!!
 		var quests = qgm.decide_quests(name, this.progress);
-		this.quests = this.quests.concat(quests);
-		alert(JSON.stringify(window.game.quests));
+		this.game_stack.push({name:"quest giver", quest_giver_name : name, quests: quests});
+	}
+	end_quest_giver(){
+		this.game_stack.pop();
+	}
+	accept_quest(quest){
+		if(!this.has_quest(quest.name)){
+			quest.state  = 2;
+			this.quests.push(quest);
+		}
 	}
 	//shop commands 
 	

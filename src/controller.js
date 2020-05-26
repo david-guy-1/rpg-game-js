@@ -144,11 +144,20 @@ class controller{
 					this.view.go_to_inventory();
 				}else if (e.code == "KeyE"){
 					this.view.go_to_skills();
+				}else if (e.code == "KeyR"){
+					this.view.go_to_quests();
 				}
+				rerender();
 			}
 			else if (state.name == "dungeon end"){
 				game.game_stack.pop();
 				rerender();
+			}
+			else if (state.name == "quest giver"){
+				if(e.code == "Space"){
+					game.end_quest_giver();
+					rerender();
+				}
 			}
 		} else if (interface_state == "inventory"){
 			var ro = this.view;
@@ -216,6 +225,11 @@ class controller{
 				//"asdfgzxcvb : choose skill to swap out. arrow keys: select skill in skill pool, e : switch skills, r : leave. You cannot equip a skill more than once"
 			}
 			rerender();
+		}else if (interface_state == "quests"){
+			if(e.code == "Space"){
+				this.view.leave_quests();
+				rerender();
+			}
 		}
 	}
 	rerender(){

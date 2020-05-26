@@ -12,8 +12,9 @@ and updates the quests.
 */
 export class quest{
 	//"type" is to indicate what type (kill, collect, etc.). "data" indicates more information ,and needs to be initialized with "progress";
-    constructor(name, type, data){
+    constructor(name, description, type, data){
         this.name = name;
+		this.description = description
 		this.type = type;
 		this.data = data;
 		this.state = 1;
@@ -23,7 +24,7 @@ export class quest{
  // kill X enemies with a certain name
 export class kill_quest extends quest {
 	constructor(name, monster, count){
-		super(name, "kill", {"monster":monster, "count":count, "current":0});
+		super(name, "Kill " + count +  " " + monster,  "kill", {"monster":monster, "count":count, "current":0});
 	}
 }
 

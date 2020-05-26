@@ -8,10 +8,11 @@ export function decide_quests(name, progress){
 		progress.quester1 = 0;
 		return [new kill_quest("quest 1", "goblin", 3)];
 	}
+	return [];
 }
 
 //returns a boolean on whether or not the quest is completed. might also mutate progress.
 export function decide_finished(name, quest,progress){ 
-
+	return true;
 }
 

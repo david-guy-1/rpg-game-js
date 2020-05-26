@@ -11,6 +11,9 @@ import D_Dungeon_Info from "./scripts/display/D_Dungeon_Info.js";
 import D_Dungeon_End from "./scripts/display/D_Dungeon_End.js";
 import D_Town from "./scripts/display/D_Town.js";
 import D_Skills from "./scripts/display/D_Skills.js";
+import D_Quest_Giver from "./scripts/display/D_Quest_Giver.js";
+import D_Current_quests from "./scripts/display/D_Current_quests.js";
+
 import g from "./config.js";
 // this is the view!
 class App extends React.Component {
@@ -131,6 +134,13 @@ class App extends React.Component {
 	leave_skills(){
 		this.interface_stack.pop();
 	}
+	
+	go_to_quests(){
+		this.interface_stack.push("quests");
+	}
+	leave_quests(){
+		this.interface_stack.pop();
+	}
 	render(){
 		
 
@@ -162,10 +172,17 @@ class App extends React.Component {
 			else if (state.name == "town"){
 				return <D_Town town={state.town}/>
 			}
+			else if (state.name == "quest giver"){
+				var quests = state.quests;
+				quests = quests.filter(function(quest){return !game.has_quest(quest.name)});
+				return <D_Quest_Giver name={state.quest_giver_name} quests={quests}/>
+			}
 		} else if (interface_state == "inventory"){
 		return <D_Inventory items={game.inventory} equip={game.player.items} selected_item = {this.inv_selected} selected_equip ={this.equip_selected} currency = {game.currency}/>
 		} else if (interface_state == "skills"){
 			return <D_Skills skills={game.skill_pool} equip={game.player.skills} selected_skill = {this.selected_skill} selected_equip ={this.selected_equip_skill} />
+		} else if (interface_state == "quests"){
+			return <D_Current_quests quests={game.quests} />
 		} 
 		return (<div> {JSON.stringify(game.game_stack)} </div>);
 	}
