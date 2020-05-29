@@ -2,6 +2,7 @@ import React from 'react';
 import * as U from "../utilities.js";
 import * as T from "../tables.js";
 import Dungeon from "../classes/dungeon.js";
+import {game_context} from "../../AppContext.js";
 class D_Dungeon extends React.Component {
 	constructor(props){
 		super(props);
@@ -19,10 +20,10 @@ class D_Dungeon extends React.Component {
 	
 	return <div>
 			  <div id="instructions" style={{"position":"absolute", "top":10,"left":500}} >{T.instructions_text["dungeon"]}</div>
-	
-	<button style={skills_button_css} onClick={function() {global.g.view.go_to_skills();global.g.controller.rerender();}}> <h2 style={{"text-align":"center"}}>Skills</h2> </button>
-	<button style={inv_button_css} onClick={function(){global.g.view.go_to_inventory();global.g.controller.rerender();}}> <h2 style={{"text-align":"center"}}>Inventory</h2></button>
-	
+	<game_context.Consumer>{function({game, view, controller}){return<span>
+	<button style={skills_button_css} onClick={function() {view.go_to_skills();controller.rerender();}}> <h2 style={{"text-align":"center"}}>Skills</h2> </button>
+	<button style={inv_button_css} onClick={function(){view.go_to_inventory();controller.rerender();}}> <h2 style={{"text-align":"center"}}>Inventory</h2></button></span>
+	}.bind(this)}</game_context.Consumer>
 	<canvas ref="dungeon_canvas" width={c.dungeon_width} height = {c.dungeon_height} style={canvas_css}> </canvas></div>
 	}
 	componentDidMount(){

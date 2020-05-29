@@ -3,7 +3,6 @@
  */
 var assert = require("assert").strict;
 require("geckodriver");
-require("../../config.js");
 
 
 const webdriver = require('selenium-webdriver');

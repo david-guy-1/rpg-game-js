@@ -2,7 +2,7 @@ import React from 'react';
 import * as U from "../utilities.js";
 import * as T from "../tables.js";
 import DC_skill_desc from "./DC_skill_desc.js";
-
+import {game_context} from "../../AppContext.js";
 
 class D_Skills extends React.Component {
 	constructor(props){
@@ -16,7 +16,7 @@ class D_Skills extends React.Component {
 		var selected_skill = this.props.selected_skill;
 		var selected_equip = this.props.selected_equip;
 		//console.log([skills],[equip])
-	    return (
+	    return <game_context.Consumer>{function({game, view, controller}){return (
 		<div>
 		  
 		  <div id="instructions" style={{"position":"absolute", "top":10,"left":500}} >{T.instructions_text["skills"]}</div>
@@ -34,7 +34,7 @@ class D_Skills extends React.Component {
 							//console.log([d,i,j])
 							var skill = skills[d];
 							//console.log(d)
-							components.push(<div style={{"position":"absolute", "top":c.skill_name_height * i,"left":c.skill_name_width * j,"width":c.skill_name_width,"height":c.skill_name_height,"background-color" : selected_skill == d ? "cyan" : "white"}} onClick={function(){global.g.view.selected_skill=this;global.g.controller.rerender()}.bind(d)}>
+							components.push(<div style={{"position":"absolute", "top":c.skill_name_height * i,"left":c.skill_name_width * j,"width":c.skill_name_width,"height":c.skill_name_height,"background-color" : selected_skill == d ? "cyan" : "white"}} onClick={function(){view.selected_skill=this;controller.rerender()}.bind(d)}>
 								{skill == undefined? "" : skill.name};
 							</div>);
 							}
@@ -56,7 +56,7 @@ class D_Skills extends React.Component {
 
 							components.push(<div style={{"position":"absolute", "top":c.skill_name_height *Math.floor(i/5),"left":c.skill_name_width * (i%5), "width":c.skill_name_width,"height":c.skill_name_height,"background-color" : selected_equip == i? "cyan" : "white"}}
 							
-							onClick = {function(){global.g.view.move_equipped_skill(this);global.g.controller.rerender()}.bind(skill_labels[i])}
+							onClick = {function(){view.move_equipped_skill(this);controller.rerender()}.bind(skill_labels[i])}
 							
 							>
 								{skill_labels[i]} : {skill == undefined?  "" :skill.name};
@@ -78,14 +78,14 @@ class D_Skills extends React.Component {
 		
 		
 			{ /*buttons for equipping and going back */}
-		<button style={{"position":"absolute", "top":c.skills_equip_top_left[1],"left":c.skills_equip_top_left[0], "width":c.skills_equip_width, "height":c.skills_equip_height,"background-color":"lightgreen"}} onClick={function(){global.g.game.equip_skill(global.g.view.selected_skill, global.g.view.selected_equip_skill); global.g.controller.rerender();}}> <h2 style={{"text-align":"center"}} > Equip skill</h2></button>
+		<button style={{"position":"absolute", "top":c.skills_equip_top_left[1],"left":c.skills_equip_top_left[0], "width":c.skills_equip_width, "height":c.skills_equip_height,"background-color":"lightgreen"}} onClick={function(){game.equip_skill( view.selected_skill, view.selected_equip_skill); controller.rerender();}}> <h2 style={{"text-align":"center"}} > Equip skill</h2></button>
 		
-		<button style={{"position":"absolute", "top":c.skills_back_top_left[1],"left":c.skills_back_top_left[0], "width":c.skills_back_width, "height":c.skills_back_height,"background-color":"lightblue"}} onClick={function(){global.g.view.leave_skills(); global.g.controller.rerender();}}> <h2 style={{"text-align":"center"}} > Go back</h2></button>
+		<button style={{"position":"absolute", "top":c.skills_back_top_left[1],"left":c.skills_back_top_left[0], "width":c.skills_back_width, "height":c.skills_back_height,"background-color":"lightblue"}} onClick={function(){view.leave_skills(); controller.rerender();}}> <h2 style={{"text-align":"center"}} > Go back</h2></button>
 		
 		
 		
 		</div>
-	    );
+	    )}.bind(this)}</game_context.Consumer>
 	}
 }
 

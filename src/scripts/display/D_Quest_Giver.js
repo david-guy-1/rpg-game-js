@@ -2,6 +2,7 @@ import React from 'react';
 import * as U from "../utilities.js";
 import DC_quest from "./DC_quest.js";
 import * as T from "../tables.js";
+import {game_context} from "../../AppContext.js";
 class D_Quest_Giver extends React.Component {
 	constructor(props){
 		super(props);
@@ -23,7 +24,9 @@ class D_Quest_Giver extends React.Component {
 		{/* quests...*/}
 		{quests.map(function(x, index) { return <DC_quest quest={x} index={index} width={boxLocation[2] - boxLocation[0]}  />})}
 		{/* back button...*/}
-		<button onClick ={function(){global.g.game.end_quest_giver(); global.g.controller.rerender()}}>Back</button>
+		<game_context.Consumer>{function({game, view, controller}){
+		return  <button onClick ={function(){game.end_quest_giver(); controller.rerender()}}>Back</button>
+		}.bind(this)}</game_context.Consumer>
 		</div>
 		 
 	</div>

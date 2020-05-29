@@ -379,7 +379,6 @@ class game {
 			this.test_town_quest();
 		}
 		this.started = true;
-		global.g.controller.rerender();
 	}
 
 }

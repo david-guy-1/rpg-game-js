@@ -4,6 +4,9 @@ import * as T from "../tables.js";
 import DC_item from "./DC_item.js";
 import DC_currency from "./DC_currency.js";
 import DC_item_icon from "./DC_item_icon.js";
+import {game_context} from "../../AppContext.js";
+
+
 class D_Fight_end extends React.Component {
 	constructor(props){
 		super(props);
@@ -19,18 +22,18 @@ class D_Fight_end extends React.Component {
 		this.render = this.render.bind(this);
 	}
 	move_left(){
-		global.g.game.select_left();
-		global.g.controller.rerender();
+		this.context.game.select_left();
+		this.context.controller.rerender();
 		
 	}
 	select_item(){
-		global.g.game.select_item();
-		global.g.controller.rerender();
+		this.context.game.select_item();
+		this.context.controller.rerender();
 
 	}
 	move_right(){
-		global.g.game.select_right();
-		global.g.controller.rerender();
+		this.context.game.select_right();
+		this.context.controller.rerender();
 		
 	}
 	
@@ -110,12 +113,14 @@ class D_Fight_end extends React.Component {
 		}
 	}.bind(this)()
 	}
-	<button style={{"position":"absolute", "top":c.fight_end_back_button_top_left[1],"left":c.fight_end_back_button_top_left[0], width:c.fight_end_buttons_width,height:c.fight_end_buttons_height}} onClick ={function(){global.g.game.finished_items(); global.g.controller.rerender()}}> Go back </button>
+	<button style={{"position":"absolute", "top":c.fight_end_back_button_top_left[1],"left":c.fight_end_back_button_top_left[0], width:c.fight_end_buttons_width,height:c.fight_end_buttons_height}} onClick ={function(){this.context.game.finished_items(); this.context.controller.rerender()}.bind(this)}> Go back </button>
 	
 	</div>
 		)
 	}
 }
+D_Fight_end.contextType = game_context; 
+
 
 export default D_Fight_end;
 

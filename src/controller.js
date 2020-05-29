@@ -232,6 +232,9 @@ class controller{
 			}
 		}
 	}
+	handleQuestButtonClick(quest,index){
+		this.game.accept_quest(quest)
+	}
 	rerender(){
 		this.view.forceUpdate();
 	}
