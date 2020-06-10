@@ -20,7 +20,8 @@ class App extends React.Component {
 
 	}
 	componentDidMount(){
-		this.setState ({"game":this.game, "view":this.view_ref.current, "controller": this.view_ref.current.controller, "goal":"abc"});
+		// needs to be setState so that the App2 will have provided values
+		this.setState ({"game":this.game, "view":this.view_ref.current, "controller": this.view_ref.current.controller, "goal":"done"});
 	}
 	
 }

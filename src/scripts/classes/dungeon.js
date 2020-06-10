@@ -18,7 +18,7 @@ class dungeon{// rows, cols, entities_table, player_start_x, player_start_y, sta
         this.player_start_y = player_start_y;
         this.locks = locks; 
         this.keys = keys; 
-		this.params = params; // make start and move functions here. 
+		this.params = params; // make stuff here
 	}
 }
 

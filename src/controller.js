@@ -63,7 +63,7 @@ class controller{
 	handleClickUp(e){
 	//	console.log([e.pageX, e.pageY]);
 		var game = this.game;
-		if(game.started == false){
+		if(game.game_state() == undefined){
 			return; 
 		}
 		var rerender = this.rerender.bind(this);
@@ -89,7 +89,7 @@ class controller{
 	//	console.log(e.code);
 
 		var game = this.game;
-		if(game.started == false){
+		if(game.game_state() == undefined){
 			return; 
 		}
 		

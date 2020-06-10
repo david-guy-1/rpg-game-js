@@ -21,6 +21,7 @@ import D_Current_quests from "./scripts/display/D_Current_quests.js";
 class App2 extends React.Component {
 	constructor(props){
 		super(props)
+		console.log("app2 ctor called" + Object.keys(this.props));
 		this.game = this.props.game;
 		this.controller =  new controller(this.game, this);
 		window.controller = this.controller;
@@ -144,13 +145,16 @@ class App2 extends React.Component {
 
 		var game = this.game;
 		var controller = this.controller;
-		if(game.started == false){
+
+		var state = game.game_state();
+
+		
+		if(game.game_state() == undefined){
 			return <div> <input type="text" id="code" /> <button onClick={function(){game.load_test_case(document.getElementById('code').value); controller.rerender();}} id="load_button">Load test </button> </div>;
 		}
-		var state = game.game_state();
+		
 		var stack = this.interface_stack;
 		var interface_state = stack[stack.length-1];
-		
 		//we're in the game
 		if(interface_state == "game"){
 			// we're fighting someone?

@@ -1,3 +1,5 @@
+// RNG and hashing utilities
+
 export function to_base_n(number, base){
 	if(number <0){
 		return "error";
@@ -147,6 +149,7 @@ export function sha256_core(m){ // m is a list of numbers ,each 8 bits. note tha
 	return x;
 }
 export function string_to_bytes(m){
+	m = m.toString();
 	var s = [];
 	for(var i=0;i<m.length;i++){
 		s.push(m[i].charCodeAt());
@@ -184,6 +187,18 @@ export function rand(seed){
 	//returns a number from [0, 1)
 	return get_number(seed) / 2**48;
 }
+
+export function choice(list,seed){
+	if(list instanceof Set){
+		list = 	[...list];
+	}
+	if(list.length == 0){
+		throw "choice with empty list"
+	}
+	return list[randint(0, list.length,seed)]
+}
+// list utilities
+
 export function point_on_circle(distance, seed){
 	var angle = rand(seed)*2*Math.PI;
 	return ([Math.floor(distance * Math.cos(angle)), Math.floor(distance * Math.sin(angle))]);
@@ -213,6 +228,20 @@ export function count(array, value){ //count the number of value's
 	return counter;
 }
 
+function union(a, b){
+	return new Set([...a, ...b])
+}
+function array_equal(a, b) {
+  if (a === b) return true;
+  if (a.length != b.length) return false;
+
+  for (var i = 0; i < a.length; ++i) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+
 export function assert(condition){
 	if(!condition){
 		throw new AssertionError(condition.toString());
@@ -241,59 +270,117 @@ export function addObject(obj1, obj2){
 	})
 }
 
-// canvas 
+// dungeon utilities
 
 
-export function drawLine(context, x0, y0, x1, y1, color="black",width=3){
-//	////console.log(x0, y0, x1, y1)
-context.strokeStyle = color;
-context.font = "14px Arial";
-context.textBaseline = "bottom";
-context.lineWidth = width;
-  context.beginPath();
-  context.stroke(); 
-  context.moveTo(x0,y0);
-  context.lineTo(x1,y1);
-  context.stroke();
-}
-
-
-//draw text with the given alignment and color
-export function drawLabel( ctx, text, color,alignment, x,y){
-  ctx.save();
-  ctx.textAlign = alignment;
-  ////console.log(p1.left+dx*offset,p1.top+dy*offset)
-  ctx.translate(x,y);
-  //ctx.rotate(Math.atan2(dy,-dx));
-  ctx.fillStyle = color;
-  ctx.fillText(text,0,0);
-  ctx.restore();
-}
-
-
-//draws a circle with the given coordinates and color
-export function drawCircle(context, x,y,r, color="black",width=3){
-  //////console.log(x,y,r)
-  
-
-  context.strokeStyle = color;
-  context.font = "14px Arial";
-  context.textBaseline = "bottom";
-  context.lineWidth = width;
-	context.beginPath();
-	context.arc(x,y,r,0*Math.PI,2*Math.PI);
-	context.strokeStyle = color;
-  context.stroke();
-  var p1 = { x: x, y: y };
-  var p2 = { x: x, y: y };
+//returns if this is a valid move.
+// direction is up, down, left , right
+function is_valid_move(rows, cols, walls, x, y, direction){
+	// move off the map?
+	if(x == 0 && direction == "left"){
+		return false;
+	}
+	if(y == 0 && direction == "up"){
+		return false;
+	}
+	if(x == cols-1 && direction == "right"){
+		return false;
+	}
+	if(y == rows-1 && direction == "down"){
+		return false;
+	}
 	
+	for(var wall of walls){
+		// check if this wall prevents movement
+		switch(direction){
+			case "up":
+				if(array_equal([x, y-1, "down"],  wall)){
+					return false;
+				}
+			break;
+			case "down":
+				if(array_equal([x, y, "down"],  wall)){
+					return false;
+				}			
+			break;
+			case "left":
+				if(array_equal([x-1, y, "right"],  wall)){
+					return false;
+				}
+			break;
+			case "right":
+				if(array_equal([x, y, "right"],  wall)){
+					return false;
+				}
+			break;
+		}
+	}
+	return true;
+} 
+
+
+// returns a list of "reachable" locations  (as space-separated string), and the walls that are part of the "frontier". Both are sets
+
+
+export function bfs(rows, cols, walls, start_x, start_y){
+	var unsearched = new Set([start_x + " " + start_y])
+	var reachable = new Set([start_x + " " + start_y]);
+	while(unsearched.size != 0){
+
+		// iterate over unsearched 
+		var new_unsearched = new Set();
+		unsearched.forEach(function(point){
+				var split_point = point.split(" ")
+				var x = parseInt(split_point[0]);
+				var y = parseInt(split_point[1]);
+				if(!reachable.has((x-1) + " " + y) && is_valid_move(rows, cols, walls, x, y, "left")){
+					new_unsearched.add((x-1) + " " + y)
+				}
+				if(!reachable.has((x+1) + " " + y) && is_valid_move(rows, cols, walls, x, y, "right")){
+					new_unsearched.add((x+1) + " " + y)
+				}
+				if(!reachable.has(x + " " + (y-1)) && is_valid_move(rows, cols, walls, x, y, "up")){
+					new_unsearched.add(x + " " + (y-1))
+				}
+				if(!reachable.has(x + " " + (y+1)) && is_valid_move(rows, cols, walls, x, y, "down")){
+					new_unsearched.add(x + " " + (y+1))
+				}
+		})
+		unsearched = new_unsearched;
+				// union unsearched and reachable
+		reachable = union(reachable, unsearched)
+	}
+	var frontier_walls = new Set();
+	walls.forEach(function(wall){
+		// check if the wall is at the edge of the dungeon
+		if(wall[1] == rows-1 && walls[2] == "down"){
+			return ; 
+		}
+		if(wall[0] == cols-1 && walls[2] == "right"){
+			return ; 
+		}
+		if(wall[2] == "right" && reachable.has(wall[0] + " " + wall[1]) != reachable.has((wall[0]+1) + " " + wall[1]) ){
+			frontier_walls.add(wall)
+		}
+		if(wall[2] == "down" && reachable.has(wall[0] + " " + wall[1]) != reachable.has(wall[0] + " " + (wall[1]+1)) ){
+			frontier_walls.add(wall)
+		}
+	})
+	return [reachable, frontier_walls]
 }
 
-export function drawRectangle(context, x0, y0, width, height,  color="black",line_width=3){
-	//drawLine(context, x0, y0, x1, y1, color, width);
-	drawLine(context, x0, y0, x0+width, y0, color, line_width);
-	drawLine(context, x0+width, y0, x0+width, y0+height, color, line_width);
-	drawLine(context, x0+width, y0+height, x0, y0+height, color, line_width);
-	drawLine(context, x0, y0+height, x0, y0, color, line_width);
-}
+/*
 
+test cases: (t1.png)
+
+ 4, 7, [[0,0,"right"],[0,1,"down"],[0,2,"right"],[1,0,"right"],[1,1,"down"],[2,1,"right"],[2,1,"down"],[2,2,"right"],[2,2,"down"],[2,3,"right"],[3,0,"down"],[3,2,"right"],[3,2,"down"],[4,1,"right"],[4,1,"down"],[5,2,"down"],[6,0,"down"],[6,2,"down"]]
+0, 0
+
+all except bottom left part
+
+ 4, 7, [[0,0,"right"],[0,1,"down"],[0,2,"right"],[1,0,"right"],[1,1,"down"],[2,1,"right"],[2,1,"down"],[2,2,"right"],[2,2,"down"],[2,3,"right"],[3,0,"down"],[3,2,"right"],[3,2,"down"],[4,1,"right"],[4,1,"down"],[5,2,"down"],[6,0,"down"],[6,2,"down"]]
+0, 3
+
+only bottom left part 
+
+*/

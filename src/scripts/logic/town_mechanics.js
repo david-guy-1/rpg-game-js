@@ -2,6 +2,7 @@ import dungeon from "../classes/dungeon.js";
 import * as data from "../data/data.js"
 import item from "../classes/item.js";
 import monster from "../classes/monster.js";
+import dungeon_generator from "../generators/G_Dungeon.js";
 export function town_click(town, progress, index){
 	// "index" is which rectangle was clicked
 	//returns an object with a "type" key
@@ -34,6 +35,9 @@ export function town_click(town, progress, index){
 		}
 		if(index == 1){
 			return {type:"fight", monsters : [data.make_weak_monster()]};
+		}
+		if(index == 2){
+			return {type:"dungeon", dungeon : dungeon_generator("name", 100, "ABCD",0.4,  4, 7)};
 		}
 	}
 	return {type:"nothing"};

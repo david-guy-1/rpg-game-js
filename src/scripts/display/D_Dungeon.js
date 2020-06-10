@@ -1,5 +1,6 @@
 import React from 'react';
 import * as U from "../utilities.js";
+import * as D from "../canvasDrawing.js";
 import * as T from "../tables.js";
 import Dungeon from "../classes/dungeon.js";
 import {game_context} from "../../AppContext.js";
@@ -59,7 +60,7 @@ class D_Dungeon extends React.Component {
 		for(var i=0; i<dungeon.dungeon.rows;i++){
 			for(var j=0; j<dungeon.dungeon.cols;j++){
 				//row i, column j at 
-				U.drawRectangle(context,tlX+j*width,tlY + i*height,width,height,"grey",1);
+				D.drawRectangle(context,tlX+j*width,tlY + i*height,tlX+j*width+width,tlY + i*height+height,"grey",1);
 			}
 		}
 		
@@ -70,9 +71,9 @@ class D_Dungeon extends React.Component {
 			var y = wall[1];
 			if(wall[2] == "right"){
 
-				U.drawLine(context,tlX + width * (x+1) , tlY + height * y ,tlX + width * (x + 1) , tlY + height * (y +1),"black",3);
+				D.drawLine(context,tlX + width * (x+1) , tlY + height * y ,tlX + width * (x + 1) , tlY + height * (y +1),"black",3);
 			} else if(wall[2] == "down"){
-				U.drawLine(context,tlX + width * x , tlY + height * (y+1) ,tlX + width * (x + 1) , tlY + height * (y +1),"black",3)			;	
+				D.drawLine(context,tlX + width * x , tlY + height * (y+1) ,tlX + width * (x + 1) , tlY + height * (y +1),"black",3)			;	
 			} else {
 				throw new TypeError("wall has invalid direction");
 			}
@@ -80,7 +81,12 @@ class D_Dungeon extends React.Component {
 		}
 		//draw the locks
 		
-		var lock_key_colors = ["purple", "red", "light blue", "pink", "brown"];
+		var lock_key_colors = ["purple", "red", "aqua", "Chartreuse", "DarkGreen", "Gold"];
+		
+		/*for(var i=0; i < lock_key_colors.length;  i++){
+			D.drawLine(context,50*i+200, 100, 50*i+200, 400 ,lock_key_colors[i],10);
+		}*/
+		
 		for(var i=0; i<dungeon.dungeon.locks.length; i++){
 			if(dungeon.unlocked[i] == true){
 				continue;
@@ -91,9 +97,9 @@ class D_Dungeon extends React.Component {
 			var y = wall[1];
 				
 			if(wall[2] == "right"){
-				U.drawLine(context,tlX + width * (x+1) , tlY + height * y ,tlX + width * (x + 1) , tlY + height * (y +1),color,3);
+				D.drawLine(context,tlX + width * (x+1) , tlY + height * y ,tlX + width * (x + 1) , tlY + height * (y +1),color,3);
 			} else if(wall[2] == "down"){
-				U.drawLine(context,tlX + width * x , tlY + height * (y+1) ,tlX + width * (x + 1) , tlY + height * (y +1),color,3)			;	
+				D.drawLine(context,tlX + width * x , tlY + height * (y+1) ,tlX + width * (x + 1) , tlY + height * (y +1),color,3)			;	
 			} else {
 				throw new TypeError("wall has invalid direction");
 			}
@@ -101,31 +107,31 @@ class D_Dungeon extends React.Component {
 		}
 		//draw the player
 		var player_coords = this.getCenter(px,py);
-		U.drawCircle(context,player_coords[0],player_coords[1], 15, "green");
+		D.drawCircle(context,player_coords[0],player_coords[1], 15, "green");
 
 		//draw each entity;
 		for(var i=0; i<entities.length;i++){
 			var entity = entities[i];
 			var entity_coords = this.getCenter(entity[0], entity[1])
 			if(entity[2].type == "monster"){
-				U.drawCircle(context,entity_coords[0],entity_coords[1], 15,"red");
-				U.drawLine(context, entity_coords[0], entity_coords[1]-10, entity_coords[0]-6, entity_coords[1]+10, "red");
-				U.drawLine(context, entity_coords[0]-6, entity_coords[1]+10, entity_coords[0]+6, entity_coords[1]+10, "red");
-				U.drawLine(context, entity_coords[0]+6, entity_coords[1]+10, entity_coords[0], entity_coords[1]-10, "red");
+				D.drawCircle(context,entity_coords[0],entity_coords[1], 15,"red");
+				D.drawLine(context, entity_coords[0], entity_coords[1]-10, entity_coords[0]-6, entity_coords[1]+10, "red");
+				D.drawLine(context, entity_coords[0]-6, entity_coords[1]+10, entity_coords[0]+6, entity_coords[1]+10, "red");
+				D.drawLine(context, entity_coords[0]+6, entity_coords[1]+10, entity_coords[0], entity_coords[1]-10, "red");
 				
 			} else if(entity[2].type == "item"){
-				U.drawCircle(context,entity_coords[0],entity_coords[1], 15,"blue");		
-				U.drawRectangle(context, entity_coords[0]-5, entity_coords[1]-5, 10, 10,"blue",3)
+				D.drawCircle(context,entity_coords[0],entity_coords[1], 15,"blue");		
+				D.drawRectangle(context, entity_coords[0]-5, entity_coords[1]-5, entity_coords[0]+5, entity_coords[1]+5,"blue",3)
 			}
 		}
 		//draw the keys
 		for(var i=0; i<dungeon.dungeon.keys.length; i++){
 			var key = dungeon.dungeon.keys[i];
 			var keyLoc = this.getCenter(key[0], key[1]);
-			U.drawCircle(context,keyLoc[0], keyLoc[1]+10, 5,lock_key_colors[i%5]);
-			U.drawLine(context,keyLoc[0], keyLoc[1]+5, keyLoc[0], keyLoc[1]-5,lock_key_colors[i%5]);
-			U.drawLine(context,keyLoc[0], keyLoc[1]-5, keyLoc[0]+5, keyLoc[1]-5,lock_key_colors[i%5]);
-			U.drawLine(context,keyLoc[0], keyLoc[1], keyLoc[0]+5, keyLoc[1],lock_key_colors[i%5]);
+			D.drawCircle(context,keyLoc[0], keyLoc[1]+10, 5,lock_key_colors[i%5]);
+			D.drawLine(context,keyLoc[0], keyLoc[1]+5, keyLoc[0], keyLoc[1]-5,lock_key_colors[i%5], 3);
+			D.drawLine(context,keyLoc[0], keyLoc[1]-5, keyLoc[0]+5, keyLoc[1]-5,lock_key_colors[i%5]);
+			D.drawLine(context,keyLoc[0], keyLoc[1], keyLoc[0]+5, keyLoc[1],lock_key_colors[i%5]);
 		}
 	}
 	//get the coordinates of the center of the cell with given coordinates

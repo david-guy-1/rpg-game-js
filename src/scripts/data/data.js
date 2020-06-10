@@ -54,7 +54,7 @@ export function make_dungeon(){
 		[[1,1,item_entity], [1,2,monster_entity], [2,2,monster_entity2],[2,0,monster_entity3]], // entities
 		0, 0,
 		[[0,1, "right"]], [[1,4]]//locks and keys
-
+		, []
 		);
 		return dungeon_inst;		
 }

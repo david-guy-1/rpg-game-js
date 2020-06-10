@@ -16,6 +16,8 @@ import * as data from "../data/data.js";
 import * as tm from "../logic/town_mechanics.js" 
 import * as qm from "../logic/quest_mechanics.js";
 import * as qgm from "../logic/quest_giver_mechanics.js";
+import dungeon_generator from "../generators/G_Dungeon.js";
+
 // might need more imports
 
 //game should not call any controller methods, at all
@@ -370,6 +372,12 @@ class game {
 		this.player.skills[0] = skills[0];
 		this.enter_town(data.make_town_by_name("town2"));
 	}
+	
+	test(){
+		// misc tests go here.
+		this.enter_dungeon(dungeon_generator("name", 100, "ABC",0.8 , 0.2,  4, 7))
+		 
+	}
 	load_test_case(name){
 		if(name == "town"){
 			this.test_town();
@@ -377,6 +385,9 @@ class game {
 		}
 		if(name == "town2"){
 			this.test_town_quest();
+		}
+		if(name == "test"){
+			this.test();
 		}
 		this.started = true;
 	}

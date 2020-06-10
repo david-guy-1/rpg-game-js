@@ -164,7 +164,7 @@ export var town_data = { // name of town -> object with keys  : image, rectangle
 	// image is a name, other 3 are 5-tuples indicating coordinates of rectangles we can click on. tlx, tly, brx, bry, color
 
 	"town1": {"image":"town1.jpg", "rectangles":[[170,230,394,418, "blue"],[402,100,638,401, "green"],[846,169,1060,417, "red"]]},
-	"town2": {"image":"town2.jpg", "rectangles":[[137,380,234,470, "blue"],[868,249,1067,427, "green"]]}
+	"town2": {"image":"town2.jpg", "rectangles":[[137,380,234,470, "blue"],[868,249,1067,427, "green"],[429,440,565,521, "green"]]}
 
 }
 
