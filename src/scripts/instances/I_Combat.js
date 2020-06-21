@@ -3,10 +3,25 @@
 import items from '../classes/item.js';
 import monster from '../classes/monster.js';
 import monster_skill from '../classes/monster_skill.js';
+import effect from "../classes/effect.js";
 import * as U from '../utilities.js';
 import compute_attack_pattern from "../logic/attack_patterns.js";
 // I think we should avoid using tables for anything other than initializing. What if we need to generate things dynamically?
 //cloning: always use Object.assign(new monster(), monster_list[i])
+
+// "special" effects:
+
+/*
+effects is a hash table now. The keys are :
+"attack, defense, poison, speed (player only), mana (player only) , other
+
+attack, defense, speed and mana are all multiplicative. 
+
+1.3 strength attack effect = damage multiplied by 1.3
+
+0.7 strength defense effect = damage multiplied by 0.7 (so lower is better) 
+*/
+
 class I_Combat{
 	constructor(player, monster_list, dungeon){ // does not mutate these
 		this.player = player;
@@ -65,7 +80,7 @@ class I_Combat{
 		this.currently_attacking_monster = target; // this is the index!
 		this.current_ticks = 0;
 		
-		this.player_effects = [];
+		this.player_effects = {"name":"player", "attack":[], "defense":[], "poison":[], "speed":[],"mana":[],"other":[]};
 		// extra code goes here, maybe. 
 		this.cooldowns = U.fillArray(0, 10);  // index -> number of ticks
 		
@@ -75,13 +90,13 @@ class I_Combat{
 		this.fighting_monsters.push(monster)
 		
 	}
-	 has_effect(unit, name){
-	 // returns if the unit has an effect
+	 has_other_effect(unit, name){
+	 // returns if the unit has an effect in the "other" category
 	 // unit is either "player" or a monster object
 		if(unit == "player"){
-			var effects_list = this.player_effects;
+			var effects_list = this.player_effects.other;
 		} else{
-			var effects_list = unit.effects
+			var effects_list = unit.effects.other
 		}
 		for(var i=0;i<effects_list.length;i++){
 			if(effects_list[i].name == name){
@@ -114,7 +129,7 @@ class I_Combat{
 			var attack_name = attack.name;
 			
 			var undead_only_attacks = ["smite undead"]
-			var has_effect = this.has_effect.bind(this)
+			var has_other_effect = this.has_other_effect.bind(this)
 			
 			// undead only on a non-undead.
 			if(target_monster.has_flag("undead") == false && undead_only_attacks.indexOf(attack_name) != -1){ 
@@ -133,7 +148,7 @@ class I_Combat{
 			}
 			// calculate mana here.
 			
-			if(attack_name == "empower" && this.has_effect("player", "empower cooldown")){
+			if(attack_name == "empower" && this.has_other_effect("player", "empower cooldown")){
 				return  false;
 			}
 			return true;
@@ -147,44 +162,82 @@ class I_Combat{
 				
 				
 			// go through every player effect and see if that changes damage dealt.
-				for(var i=0;i<this.player_effects.length;i++){
-					var effect = this.player_effects[i];
-					
+			//default effects:
+				for(var i=0;i<this.player_effects.attack.length;i++){
+					var effect = this.player_effects.attack[i];
+					tentative_damage = effect.strength * tentative_damage;
+				}
+				
+				// same for monster
+				for(var i=0;i<target_monster.defense.length;i++){
+					var effect = target_monster.effects.defense[i];	
+					// (monster's) effects, well , effect starts here.
+					tentative_damage = effect.strength * tentative_damage;
+				}
+			
+
+
+			// non-default effects
+				for(var i=0;i<this.player_effects.other.length;i++){
+					var effect = this.player_effects.other[i];
 					// (player's) effects, well , effect starts here.
-					if(effect.name == "attack_mult"){
-						tentative_damage *= effect.strength;
-					}
 				}
 				
 				// same for monster
 				for(var i=0;i<target_monster.effects.length;i++){
-					var effect = target_monster.effects[i];	
+					var effect = target_monster.effects.other[i];	
 					// (monster's) effects, well , effect starts here.
 				}
-			return tentative_damage;
+			return Math.floor(tentative_damage);
+	}
+	calculate_mana_cost(attack_index, target_monster){
+				var attack = this.player.skills[attack_index]
+				var attack_name = attack.name;
+				var tentative_cost = attack.mana; 				
+				// go through every player effect and see if that changes mana cost.
+				
+				//default effects
+				for(var i=0;i<this.player_effects.mana.length;i++){
+					var effect = this.player_effects.mana[i];
+					// (player's) effects, well , effect starts here.
+					tentative_cost = tentative_cost * effect.strength;
+				}				
+
+				
+				
+				// non-default effects
+				for(var i=0;i<this.player_effects.other.length;i++){
+					var effect = this.player_effects.other[i];
+					// (player's) effects, well , effect starts here.
+				}
+			
+				// same for monster
+				for(var i=0;i<target_monster.effects.other.length;i++){
+					var effect = target_monster.effects.other[i];	
+					// (monster's) effects, well , effect starts here.
+				}
+			return Math.floor(tentative_cost);			
 	}
 	// "global" cooldown
 	 calculate_delay_p2m(attack_index, target_monster){ 
 				var attack = this.player.skills[attack_index]
 				var attack_name = attack.name;
 				var tentative_delay = attack.delay; 				
-				// go through every player effect and see if that changes damage dealt.
-				
-				for(var i=0;i<this.player_effects.length;i++){
-					var effect = this.player_effects[i];
+				// go through every player effect and see if that changes delay.
+	
+				// non-default effects
+				for(var i=0;i<this.player_effects.other.length;i++){
+					var effect = this.player_effects.other[i];
 					
 					// (player's) effects, well , effect starts here.
-					if(effect.name == "speed_mult"){
-						tentative_delay *= effect.strength;
-					}
 				}
 				
 				// same for monster
-				for(var i=0;i<target_monster.effects.length;i++){
-					var effect = target_monster.effects[i];	
+				for(var i=0;i<target_monster.effects.other.length;i++){
+					var effect = target_monster.effects.other[i];	
 					// (monster's) effects, well , effect starts here.
 				}
-			return tentative_delay;	
+			return Math.floor(tentative_delay);	
 	}
 	//cooldown for that one ability
 	calculate_cd_p2m(attack_index, target_monster){ 
@@ -192,20 +245,27 @@ class I_Combat{
 			var attack_name = attack.name;
 			var tentative_cd = attack.cd; 				
 				// go through every player effect and see if that changes cooldown.
+
+				//default effects
+				for(var i=0;i<this.player_effects.speed.length;i++){
+					var effect = this.player_effects.speed[i];
+					// (player's) effects, well , effect starts here.
+					tentative_cd = tentative_cd * effect.strength;
+				}			
 				
-				for(var i=0;i<this.player_effects.length;i++){
-					var effect = this.player_effects[i];
+				for(var i=0;i<this.player_effects.other.length;i++){
+					var effect = this.player_effects.other[i];
 					
 					// (player's) effects, well , effect starts here.
 
 				}
 				
 				// same for monster
-				for(var i=0;i<target_monster.effects.length;i++){
-					var effect = target_monster.effects[i];	
+				for(var i=0;i<target_monster.effects.other.length;i++){
+					var effect = target_monster.effects.other[i];	
 					// (monster's) effects, well , effect starts here.
 				}
-			return tentative_cd;	
+			return Math.floor(tentative_cd);	
 	}
 	
 	
@@ -215,14 +275,14 @@ class I_Combat{
 		//self 
 		for(var i=0; i<attack.self_effects.length;i++){
 			var effect = attack.self_effects[i]
-			this.player_effects.push(effect);
+			this.add_effect(this.player_effects, effect);
 	//		console.log("adding effect " + effect.name  + " at tick " + this.current_ticks);
 		}
 		
 		//enemy monster
 		for(var i=0; i<attack.target_effects.length;i++){
 			var effect = attack.target_effects[i]
-			target_monster.effects.push(effect);
+			this.add_effect(target_monster.effects, effect); 
 		}
 		
 		//all 
@@ -230,7 +290,7 @@ class I_Combat{
 			for(var j=0; j<this.fighting_monsters.length;j++){
 					var effect = attack.global_effects[i]
 					var monster = this.fighting_monsters[j];
-					monster.effects.push(effect)
+					this.add_effect(monster.effects, effect); 
 			}
 			
 		}
@@ -240,9 +300,9 @@ class I_Combat{
 	//attack is a monster_skill instance, since there are no indices for monste skills
 	//target_index is either "player", or the index of a monster
 	 does_monster_attack_succeed(attack, target_index){  
-		var has_effect = this.has_effect.bind(this)
+		var has_other_effect = this.has_other_effect.bind(this)
 		
-		if(has_effect("player", "immune")){
+		if(has_other_effect("player", "immune")){
 			return false;
 		}
 			return true;			
@@ -251,22 +311,39 @@ class I_Combat{
 	
 	 calculate_damage_m2p(attack, attacking_monster){
 			var tentative_damage = attack.damage*attacking_monster.attack;
+			
 			// go through every monster effect and see if that changes damage dealt.
-				for(var i=0;i<attacking_monster.effects.length;i++){
-					var effect = attacking_monster.effects[i];
+			
+			//default effects:
+				for(var i=0;i<this.player_effects.defense.length;i++){
+					var effect = this.player_effects.defense[i];
+					tentative_damage = effect.strength * tentative_damage;
+				}
+				
+				// same for monster
+				for(var i=0;i<attacking_monster.attack.length;i++){
+					var effect = attacking_monster.effects.attack[i];	
+					// (monster's) effects, well , effect starts here.
+					tentative_damage = effect.strength * tentative_damage;
+				}
+						
+			
+				for(var i=0;i<attacking_monster.effects.other.length;i++){
+					var effect = attacking_monster.effects.other[i];
 					
 					// (monster's) effects, well , effect starts here.
 				}
 				
 				// same for player
-				for(var i=0;i<this.player_effects.length;i++){
-					var effect = this.player_effects[i];	
+				for(var i=0;i<this.player_effects.other.length;i++){
+					var effect = this.player_effects.other[i];	
 					// (player's) effects, well , effect starts here.
 				}
-			return tentative_damage;
+			return Math.floor(tentative_damage);
 	}
 	 calculate_cd_m2p(attack, attacking_monster){
 		var tentative_cd = attack.cd; 				
+		
 		// go through every monster effect and see if that changes damage dealt.
 				
 				for(var i=0;i<attacking_monster.effects.length;i++){
@@ -279,20 +356,20 @@ class I_Combat{
 					var effect = this.player_effects[i];	
 					// (player's) effects, well , effect starts here.
 				}
-			return tentative_cd;	
+			return Math.floor(tentative_cd);	
 	}
 	
 	 apply_effects_m2p(attack, attacking_monster){
 		//self 
 		for(var i=0; i<attack.self_effects.length;i++){
 			var effect = attack.self_effects[i]
-			attacking_monster.effects.push(effect);
+			this.add_effect(attacking_monster.effects, effect);
 		}
 		
 		//player
 		for(var i=0; i<attack.target_effects.length;i++){
 			var effect = attack.target_effects[i]
-			this.player_effects.push(effect);
+			this.add_effect(this.player_effects, effect);
 		}
 		
 		//all 
@@ -300,19 +377,65 @@ class I_Combat{
 			for(var j=0; j<this.fighting_monsters.length;j++){
 					var effect = attack.global_effects[i]
 					var monster = this.fighting_monsters[j];
-					monster.effects.push(effect)
+					this.add_effect(monster.effects, effect);
 			}
 		}
 	}
 
-
-	
-	//when multiple effects expire, these will be called in order of decreasing index;
-	 player_effect_expire(index){
-		this.player_effects.splice(index,1);
+	add_effect(current_effects, new_effect){
+		if(new_effect.duration == 0){
+			throw "effect with duration 0";
+		}
+		switch(new_effect.name){
+			case "attack":
+			case "defense":
+			case "poison":
+			case "speed":
+			case "mana":
+				current_effects[new_effect.name].push(Object.assign(new effect(), new_effect));
+			break;
+			default:
+				current_effects["other"].push(Object.assign(new effect(), new_effect));
+			
+		}
 	}
-	 monster_effect_expire(monster_index,index){
-		this.fighting_monsters[monster_index].effects.splice(index, 1);
+	
+	decrement_effect_duration(effects){
+		console.log(effects.name)
+		console.log(JSON.stringify(effects));
+		var keys = Object.keys(effects);
+		var expired_effects = [];
+		for(var x of keys){
+			if(x == "name"){
+				continue;
+			}
+			// decrement each one, backwards.
+			for(var i=effects[x].length-1; i >=0 ; i--){
+				effects[x][i].duration -= 1;
+				if(effects[x][i].duration < 0){
+					throw "effect duration negative";
+				}			
+				if(effects[x][i].duration == 0){
+					// delete this effect
+					expired_effects.push(effects[x][i]);
+					effects[x].splice(i, 1)
+				}
+
+			}
+		}
+		return expired_effects;
+	}
+
+	//when multiple effects expire, these will be called in order of decreasing index;
+	 player_effect_expire(effect){
+		if(effect.name == "delay damage"){
+			this.player_hp -= Math.floor(effect.strength);		 	
+		}
+	}
+	 monster_effect_expire(monster, effect){
+		if(effect.name == "delay damage"){
+			monster.hp -= Math.floor(effect.strength);
+		}
 	}
 	
 	 player_death(){
@@ -352,9 +475,12 @@ class I_Combat{
 			// attack using given attack;
 			var target_monster = this.fighting_monsters[player_queued["target"]]; // this is an actual monster instance
 			var attack = player_queued["skill"]; //this is NOT just the name
-			
-			var attack_succeeds = this.does_attack_succeed(this.currently_queued_attack, target_monster);
-			
+			var mana_cost = this.calculate_mana_cost(this.currently_queued_attack, target_monster)
+			if(mana_cost > this.player_mana){
+				var attack_succeeds = false;
+			} else {
+				var attack_succeeds = this.does_attack_succeed(this.currently_queued_attack, target_monster);
+			}
 			
 			// attacks can go wrong;
 			
@@ -366,6 +492,7 @@ class I_Combat{
 				var damage = this.calculate_damage_p2m(this.currently_queued_attack, target_monster)
 				var cd = this.calculate_delay_p2m(this.currently_queued_attack, target_monster)
 				this.cooldowns[this.currently_queued_attack] = this.calculate_cd_p2m(this.currently_queued_attack, target_monster);
+				this.player_mana -= mana_cost;
 				this.player_current_cd = Math.floor(cd);
 				target_monster.hp -= Math.floor(damage);
 				this.apply_effects_p2m(this.currently_queued_attack, target_monster);
@@ -395,7 +522,7 @@ class I_Combat{
 				// attacks can go wrong;
 				
 
-				if(attack_succeeds){ // monster attack succeeds.
+				if(attack_succeeds && monster_attack_target == "player"){ // monster attack succeeds.
 					
 					var damage = this.calculate_damage_m2p(monster_attack, current_monster);
 					var cd = this.calculate_cd_m2p(monster_attack, current_monster);
@@ -418,37 +545,29 @@ class I_Combat{
 				this.cooldowns[i] = 0;
 			}
 		}
-		// handle all effects, backwards so that removing effects doesn't mess up rest of the list.
-		
-		for(var i=this.player_effects.length-1;i>=0;i--){
-			var effect = this.player_effects[i];
-			effect.duration-=1;
-			// player effect tick  goes here
-			if(effect.name == "poison"){
-				this.player_hp -= effect.strength;
-			}
-			if(effect.duration <= 0){
-				// expiry effects go here.
-				this.player_effect_expire(i);
+		// then, poison
+		for(var effect of this.player_effects["poison"]){
+			this.player_hp -= effect.strength;
+		}
+		for(var monster of this.fighting_monsters){
+			for(var effect of monster.effects["poison"]){
+				monster.hp -= effect.strength;
 			}
 		}
+		
+		// handle all effects, backwards so that removing effects doesn't mess up rest of the list.
+		var result = this.decrement_effect_duration(this.player_effects);
+		for(var effect of result){
+			this.player_effect_expire(effect);
+		}
+
 		//monsters : kth monster: 
 		for (var k=fighting_monsters.length-1;k>=0; k--){
 			var this_monster = this.fighting_monsters[k];
-			var monster_effects = this_monster.effects;
-			//ith effect
-			for(var i=monster_effects.length-1;i>=0;i--){
-				var monster_effect = monster_effects[i];
-				// monster effect tick goes here
-				if(effect.name == "poison"){
-					this_monster.hp -= effect.strength;
-				}
-				monster_effect.duration-=1;
-				if(monster_effect.duration <= 0){
-					// expiry effects go here.
-					this.monster_effect_expire(k, i);
-				}
-			}	
+			var result = this.decrement_effect_duration(this_monster.effects);	
+			for(var effect of result){
+				this.monster_effect_expire(this_monster, effect);
+			}
 		}
 		
 		// handle deaths.
@@ -469,7 +588,7 @@ class I_Combat{
 			this.fight_end("player wins");
 		}
 		
-		// cooldowns go down
+		// delays go down
 		for (var k=0;k<fighting_monsters.length; k++){
 			fighting_monsters[k].current_cd = Math.max(fighting_monsters[k].current_cd-1, 0);
 		}	

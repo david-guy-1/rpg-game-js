@@ -6,9 +6,10 @@ import * as U from "../utilities.js";
 //monster_generator(difficulty, attack_adjust = 1, defense_adjust = 1, hp_adjust = 1, flags = [],attack_pattern = "basic attack"
 //constructor(name, description,end_display,rows,cols,walls,entities,player_start_x,player_start_y,locks, keys, params){
 
-function dungeon_generator(name, difficulty, seed, wall_density, enemy_density, rows, cols){
+function dungeon_generator(name, difficulty, seed, wall_density, enemy_density, key_limit , rows, cols){
+	U.assert(U.check_type(arguments, ["string", "number", "string", "number", "number", "number", "number", "number"], "dungeon generator type error"))
 	var walls = new Set();
-	var occupied = new Set(); // occupied places, as strings
+	var occupied = new Set(["0 0"]); // occupied places, as strings
 	var entities = [];
 	var locks =[];
 	var keys = [];
@@ -25,7 +26,7 @@ function dungeon_generator(name, difficulty, seed, wall_density, enemy_density, 
 					walls.add([x, y, "right"])
 					
 				}
-				if(down_wall){
+				if(down_wall && !(x == 0 && y == 0)){
 					walls.add([x, y, "down"])
 				}
 			}
@@ -39,15 +40,34 @@ function dungeon_generator(name, difficulty, seed, wall_density, enemy_density, 
 	var frontier = result[1];
 	var counter  = 0;
 	while( !reachable.has((cols-1) + " " + (rows-1) )){
-		// replace a frontier wall with a lock and key
-		var removed_wall = U.choice(frontier, "removing wall " + seed + counter);
-		var key_location = U.choice(reachable, "adding key " + seed + counter);
-		walls.delete(removed_wall);
-		locks.push(removed_wall);
-		occupied.add(key_location);
-		keys.push([parseInt(key_location.split(" ")[0]),parseInt(key_location.split(" ")[1])]); 
-		U.choice(frontier, "removing wall " + seed + counter);
 		counter ++;
+		// replace a frontier wall with a lock and key
+		
+		/*
+		var cofrontier = U.bfs(rows, cols, walls, rows-1, cols-1)[1];
+		if(U.intersect(frontier, cofrontier).size != 0){
+			var removed_wall = U.choice(U.intersect(frontier, cofrontier), "removing wall " + seed + counter);
+		} else {
+			if(frontier.size <= cofrontier.size){
+				var removed_wall = U.choice(frontier, "removing wall " + seed + counter);
+			}else{
+				var removed_wall = U.choice(cofrontier, "removing wall " + seed + counter);
+			}
+		}*/
+		
+		var removed_wall = U.choice(frontier, "removing wall " + seed + counter);
+		// remove the wall 
+		walls.delete(removed_wall);
+		// should we add a lock and key?
+		if(U.minus(reachable, occupied).size != 0 && occupied.size < key_limit + 1){
+			var key_location = U.choice(U.minus(reachable, occupied) , "adding key " + seed + counter);
+			locks.push(removed_wall);
+			occupied.add(key_location);
+			keys.push([parseInt(key_location.split(" ")[0]),parseInt(key_location.split(" ")[1])]); 
+		} else {
+			console.log("B")
+		}
+		
 		result = U.bfs(rows, cols,walls,0, 0)
 	    reachable = result[0];
 		frontier = result[1];
@@ -67,23 +87,18 @@ function dungeon_generator(name, difficulty, seed, wall_density, enemy_density, 
 				if(x == 0 && y == 0){
 					continue;
 				}
-					
-					console.log(monster_generator(
+
+					var monster = monster_generator(
 						difficulty,
-						1 + U.rand("monster attack " + x + " " + y)*0.1,
-						1 + U.rand("monster def " + x + " " + y)*0.1,
-						1 + U.rand("monster hp " + x + " " + y)*0.1,
-					))
+						1 + U.rand(seed + "monster attack " + x + " " + y)*0.1,
+						1 + U.rand(seed + "monster def " + x + " " + y)*0.1,
+						1 + U.rand(seed + "monster hp " + x + " " + y)*0.1,
+					);
 					
-					
+			//		console.log(monster);
 					entities.push([x, y, new dungeon_entity("monster",
 					//monster_generator(difficulty, attack_adjust = 1, defense_adjust = 1, hp_adjust = 1, flags = [],attack_pattern = "basic attack"
-					[monster_generator(
-						difficulty,
-						1 + U.rand("monster attack " + x + " " + y)*0.1,
-						1 + U.rand("monster def " + x + " " + y)*0.1,
-						1 + U.rand("monster hp " + x + " " + y)*0.1,
-					)])])
+					[monster])])
 					occupied.add(x + " " + y);
 				}
 			

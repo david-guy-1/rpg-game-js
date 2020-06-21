@@ -64,12 +64,14 @@ class game {
 		}
 	}
 	equip_item(x,y){ // attempt to swap item x in inventory with item y in equips
+		U.assert(U.check_type(arguments, ["number", "number"]));
 		var item = this.player.items[y];
 		var inv_item = this.inventory[x];
 		this.player.items[y] = inv_item;
 		this.inventory[x] = item;
 	}	
 	equip_skill(x,y){ // attempt to equip skill x in skill pool with y in equipped skills
+		U.assert(U.check_type(arguments, ["number", "number"]));
 		var player = this.player;
 		var skill = this.skill_pool[x];
 		if(skill == undefined){ // un-equipping always works
@@ -86,6 +88,7 @@ class game {
 		}
 	}
 	has_quest(name){ //does the player have a quest with this name? (includes completed)
+		U.assert(U.check_type(arguments, ["string"]));
 		var found = false;
 		this.quests.forEach(function(x){
 			if(x.name == name){
@@ -97,6 +100,7 @@ class game {
 
 	// fight commands:
 	start_fight(combat_instance){
+		U.assert(U.check_type(arguments, [I_Combat]));
 		this.game_stack.push({name :"fighting",combat_instance :combat_instance});
 		combat_instance.fight_begin(0,0);
 	}
@@ -181,12 +185,13 @@ class game {
 		this.game_stack.pop();
 	}
 	//dungeon commands
-	enter_dungeon(dungeon){
+	enter_dungeon(dungeon_c){
+		U.assert(U.check_type(arguments, [dungeon]));
 		//do NOT mutate the dungeon at all. note that combat clones the monsters, so we can call it.
-		this.game_stack.push({name:"dungeon", "dungeon_instance":new I_Dungeon(dungeon), "dismissed":false});
+		this.game_stack.push({name:"dungeon", "dungeon_instance":new I_Dungeon(dungeon_c), "dismissed":false});
 		dm.dungeon_begin(this.game_state().dungeon_instance,this.progress);
 
-		qm.dungeon_entered(this.quests, dungeon);
+		qm.dungeon_entered(this.quests, dungeon_c);
 	}
 	dismiss(){
 		this.game_state().dismissed = true;
@@ -194,43 +199,26 @@ class game {
 	undismiss(){
 		this.game_state().dismissed = false;
 	}
-	player_pressed_button(code){ // player pressed a button in the dungeon. check things.
-		if(this.game_state().name == "dungeon"){
-			/*
+	// called on attempt to move player, regardless of walls, etc. 
+	move_player_dungeon(direction){
+		/*
 			when the user preses a button in a dungeon, this happens:
 			1. the controller's handleKeyDown function is called, 
-			2. that function calls this function, which first calls I_Dungeon's move_player function
+			2. if the button is an arrow key or WASD, that function calls this function, which first calls I_Dungeon's move_player function
 			3. If the move is successful, calls dm.dungeon_moved
 			4. Then, checks if there is an entity on where the player moved to. If so, remove it first, then activate it.
 			5. player_pressed_button checks if a key has been stepped on. If so, unlocks the corresponding door first, then calls dungeon_door_unlocked
 			6. without waiting for the entity to finish, determines if dungeon should end, and if no event triggered and we should end, ends the dungeon.
 			7. After the entity is finished and items have already been added to inventory, dm.dungeon_fight_ended or dm.dungeon_chest_collected is called, if applicable.
-			*/
-			var d  = this.get_frame_with_name("dungeon").dungeon_instance;
-			
-			// first, move player 
-			var moved = false;
-			if(code == "KeyW"){
-				moved = d.move_player("up");
-			} else if(code == "KeyA"){
-				moved =d.move_player("left");
-			} else if(code == "KeyS"){
-				moved =d.move_player("down");
-			} else if(code == "KeyD"){
-				moved =d.move_player("right");
-			} else if (code == "Space"){
-				if(this.game_state().dismissed){
-					this.undismiss();
-				} else {
-					this.dismiss();
-				}
-			}
-			
-			if(moved){
-				dm.dungeon_moved(d, this.progress)
-			}
-				
-			if(d.player_on() != undefined){
+		*/
+		var d  = this.get_frame_with_name("dungeon").dungeon_instance;
+		var moved = d.move_player(direction)
+		// call dungeon moved
+		if(moved){
+			dm.dungeon_moved(d, this.progress)
+		}
+		// trigger effects;
+		if(d.player_on() != undefined){
 				var entity = d.player_on();
 				d.remove_entity_by_location(d.player_x, d.player_y);
 				if(entity.type == "monster"){
@@ -240,21 +228,22 @@ class game {
 
 					this.start_fight_end(entity.items, entity.currency);
 				}
-			}
-			if(d.key_on() != undefined){
+		}
+		if(d.key_on() != undefined){
 				d.unlock_door(d.key_on());
 				dm.dungeon_door_unlocked(this.dungeon_instance,this.progress);
 			}
-			if(dm.dungeon_end(d,this.progress) && this.game_state().name== "dungeon"){
+		if(dm.dungeon_end(d,this.progress) && this.game_state().name== "dungeon"){
 				this.game_stack[this.game_stack.length-1].name = "dungeon end"; // leave dungeon
 				qm.dungeon_finished(this.game_state().dungeon_instance);
-			}
-		}
+		}		
 	}
+
 	
 	// town commands
-	enter_town(town){
-		this.game_stack.push({name:"town", town : town});
+	enter_town(town_c){
+		U.assert(U.check_type(arguments, [town]));
+		this.game_stack.push({name:"town", town : town_c});
 	}
 	//entered a town
 	town_clicked(index){
@@ -372,12 +361,49 @@ class game {
 		this.player.skills[0] = skills[0];
 		this.enter_town(data.make_town_by_name("town2"));
 	}
-	
+	test_show_dungeons(){
+		
+		this.parameter = 0;
+		this.seed = prompt();
+		setInterval(function(){
+		this.parameter += 1;
+		console.log(this.seed + this.parameter);
+		this.enter_dungeon(dungeon_generator("name", 10, this.seed + this.parameter,0.8 , 0.2, 4, 10, 10))
+		this.dismiss();
+		window.controller.rerender();
+		}.bind(this), 1000);
+		
+	}
 	test(){
 		// misc tests go here.
-		this.enter_dungeon(dungeon_generator("name", 100, "ABC",0.8 , 0.2,  4, 7))
+		var items = data.make_items();
+		var skills = data.make_skills();
+		items[0].attack = 7500;
+		this.player.items[0] = items[0];
+		this.player.items[1] = items[2];
+		this.player.skills[0] = skills[0];
+		this.player.skills[1] = skills[3];
+		this.player.skills[2] = skills[4];
+		this.seed = prompt();
+		
+		this.enter_dungeon(dungeon_generator("name", 10, this.seed ,0.8 , 0.2,4 , 10, 10))
+		this.dismiss();
+		window.controller.rerender();
+		
 		 
 	}
+	
+	test_dungeon_skills(){
+
+		
+		this.player.skills = data.make_effect_skills();
+		this.player.items = data.make_items();
+		var dungeon_inst = data.make_dungeon();
+		dungeon_inst.entities[1][2].monsters.splice(1, 1); // no instant kills
+		this.enter_dungeon(dungeon_inst);
+	}
+	
+	
 	load_test_case(name){
 		if(name == "town"){
 			this.test_town();
@@ -386,8 +412,14 @@ class game {
 		if(name == "town2"){
 			this.test_town_quest();
 		}
-		if(name == "test"){
+		if(name == "show"){
+			this.test_show_dungeons();
+		}
+		if(name == "dungeon test"){
 			this.test();
+		}
+		if(name == "skills test"){
+			this.test_dungeon_skills();
 		}
 		this.started = true;
 	}

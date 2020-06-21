@@ -1,5 +1,10 @@
+import * as U from '../utilities.js';
 class player_skill{
     constructor(name,damageMult,cd,delay,mana,self_effects,target_effects,global_effects,description){
+		U.assert(U.check_type(arguments, 
+		["string", "number", "number", "number", "number", Array, Array, Array, "string"]
+		
+		));
 		this.name = name;
         this.damageMult = damageMult;
         this.cd = cd;

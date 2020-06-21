@@ -85,7 +85,7 @@ export var display_constants  = {
 	"inv_button_width":130,
 	"inv_button_height":70,
 	"dungeon_top_left":[100,100],
-	"dungeon_width":500,
+	"dungeon_width":900,
 	"dungeon_height":600,
 	"dungeon_cell_width":50,
 	"dungeon_cell_height":50,

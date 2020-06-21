@@ -228,8 +228,26 @@ export function count(array, value){ //count the number of value's
 	return counter;
 }
 
-function union(a, b){
+export function union(a, b){
 	return new Set([...a, ...b])
+}
+export function intersect(a, b){
+	var Y = new Set();
+	for(var i of  a){
+		if(b.has(i)){
+			Y.add(i)
+		}
+	}
+	return Y;
+}
+export  function minus(a, b){
+	var Y = new Set();
+	for(var i of  a){
+		if(!b.has(i)){
+			Y.add(i)
+		}
+	}
+	return Y;
 }
 function array_equal(a, b) {
   if (a === b) return true;
@@ -242,11 +260,7 @@ function array_equal(a, b) {
 }
 
 
-export function assert(condition){
-	if(!condition){
-		throw new AssertionError(condition.toString());
-	}
-}
+
 // fill array with this value
 export function fillArray(value, len) {
   if (len == 0) return [];
@@ -269,6 +283,61 @@ export function addObject(obj1, obj2){
 		}
 	})
 }
+
+// assert 
+export function assert(condition, message = ""){
+	if(!condition){
+		throw new AssertionError(condition.toString() + message);
+	}
+}
+
+// check type
+
+// example : check_type([3, []], ["number", Array]) => true
+// check_type([3, []], ["string", Array]) => false 
+// check_type(["3", []], ["string", Array]) => true
+// check_type(["3", new Set([3, 2])], ["string", Array]) => false
+// check_type(["3", new Set([3, 2])], ["string", Set]) => true
+export function check_type(x, y){
+	for(var i=0; i<x.length && i < y.length; i++){
+		if(typeof(x[i]) == y[i] || typeof(x[i]) == "object" && x[i] instanceof y[i]){
+			continue;
+		}
+		return false;
+	}
+	return true;
+}
+
+// attack utilities
+
+// see I_Combat for special effects
+
+
+
+/*
+
+{
+	"attack": [{"name":"attack", "duration":10}, {"name":"attack", "duration":1, "tag":"abcd"}, {"name":"attack", "duration":13}],
+	"defense": [{"name":"defense", "duration":1}, {"name":"defense", "duration":13}],	
+	"speed": [{"name":"speed", "duration":1, "tag":"efgh"}],	
+	"mana": [{"name":"mana", "duration":17, "tag":"ijkl"}, {"name":"mana", "duration":31}],	
+	"other": [],
+}
+
+// expected result:
+
+{
+	"attack": [{"name":"attack", "duration":9}, {"name":"attack", "duration":12}],
+	"defense": [ {"name":"defense", "duration":12}],	
+	"speed": [],	
+	"mana": [{"name":"mana", "duration":16, "tag":"ijkl"}, {"name":"mana", "duration":30}],	
+	"other": [],
+}
+
+output : 
+[{"name":"attack", "duration":0, "tag":"abcd"},{"name":"defense", "duration":0} , {"name":"speed", "duration":0, "tag":"efgh"}]
+*/
+
 
 // dungeon utilities
 

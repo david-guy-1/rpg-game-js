@@ -6,7 +6,7 @@ class monster{
         this.defense = defense;
         this.hp = hp;
         this.max_hp=hp;
-        this.effects = [];
+        this.effects = {"name":name, "attack":[], "defense":[], "poison":[], "speed":[],"mana":[],"other":[]};
         this.flags = flags; // is the monster, say, undead . 
         this.attack_pattern = attack_pattern; // not used right now
         this.drops = drops; // item drops list

@@ -92,10 +92,70 @@ export function make_skills(){
 		
 		var protect = new player_skill("protect", 0,5000, 40, 30, [new effect("immune", 40, 0, "player")], [], [], "makes yourself temporarily immune to damage for 40 ticks. 5000 ticks cooldown");
 		
-		return [basic_attack, smite_undead, protect ];
+		var quick_attack = new player_skill("quick attack", 0.9 ,25, 5, 0, [], [], [], "attack faster than usual, but with less damage");
+	
+		var strong_attack = new player_skill("strong attack", 1.3 ,40, 40, 30, [], [], [], "a strong attack, but costs mana");
+		
+		return [basic_attack, smite_undead, protect, quick_attack, strong_attack ];
 }
 
 
+// make skills that have effects
+
+//	"attack, defense, poison, speed (player only), mana (player only) , other
+
+export function make_effect_skills(){
+	var basic_attack = new player_skill("basic attack", 1, 40,2 ,0, [], [], [], "A basic attack");
+	
+	var poison_attack = new player_skill(
+		"poison attack",
+		1,
+		100,
+		5,
+		30,
+		[],
+		[new effect("poison", 100, 5)],
+		[],
+		"An attack that poisons for 100 ticks"
+	)
+
+	var empower = new player_skill(
+		"empower",
+		0,
+		500,
+		5,
+		20,
+		[new effect("attack", 200, 1.4)],
+		[],
+		[],
+		"Increases damage for 200 ticks"
+	)	
+	
+	var manaless = new player_skill(
+		"manaless",
+		0,
+		500,
+		5,
+		0,
+		[new effect("mana", 250, 0)],
+		[],
+		[],
+		"Attacks don't cost mana for 250 ticks"
+	)	
+	
+	var haste = new player_skill(
+		"haste",
+		0,
+		500,
+		5,
+		0,
+		[new effect("speed", 250, 0.5)],
+		[],
+		[],
+		"Cooldowns halved"
+	)	
+	return [basic_attack , poison_attack, empower, manaless, haste];
+}
 
 export function make_town_by_name(name){
 	return new town(name, T.town_data[name].rectangles); 

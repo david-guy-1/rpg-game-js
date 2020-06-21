@@ -37,7 +37,7 @@ export function town_click(town, progress, index){
 			return {type:"fight", monsters : [data.make_weak_monster()]};
 		}
 		if(index == 2){
-			return {type:"dungeon", dungeon : dungeon_generator("name", 100, "ABCD",0.4,  4, 7)};
+			return {type:"dungeon", dungeon : dungeon_generator("name", 100, "ABCD",0.4,  0.3, 4, 7)};
 		}
 	}
 	return {type:"nothing"};

@@ -20,7 +20,7 @@ class DC_skill_desc extends React.Component {
 	{ /* box */}
 	<div style={{"position":"absolute","border":"1px solid black","width":c.skill_desc_width,"height":c.skill_desc_height, "padding":"2px"}}>
 	<h3>{skill.name}</h3>
-	Damage: {skill.damage}%  <br />
+	Damage: {skill.damageMult}%  <br />
 	Cooldown: {skill.cd}  <br />
 	Mana: {skill.mana}  <br />
 	Delay: {skill.delay}  <br />

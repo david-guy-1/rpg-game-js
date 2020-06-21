@@ -136,8 +136,32 @@ class controller{
 					
 					rerender();
 				}
-			} else if (state.name == "dungeon"){
-				game.player_pressed_button(e.code);
+			} else if (state.name == "dungeon"){ // pressed a button in dungeon				
+				switch(e.code){
+					case "KeyW":
+					case "ArrowUp":
+						game.move_player_dungeon("up");
+					break;
+					case "KeyA":
+					case "ArrowLeft":
+						game.move_player_dungeon("left");
+					break;
+					case "KeyS":
+					case "ArrowDown":
+						game.move_player_dungeon("down");
+					break;
+					case "KeyD":
+					case "ArrowRight":
+						game.move_player_dungeon("right");
+					break;
+					case "Space":
+					if(state.dismissed){
+						game.undismiss();
+					} else {
+						game.dismiss();
+					}
+					break;
+				}
 				rerender();
 			} else if (state.name == "town" || state == "dungeon"){
 				if (e.code == "KeyQ"){
@@ -163,15 +187,19 @@ class controller{
 			var ro = this.view;
 			switch(e.code){
 				case "KeyW":
+				case "ArrowUp":
 					ro.move_inventory("up");
 				break;
 				case "KeyA":
+				case "ArrowLeft":
 					ro.move_inventory("left");				
 				break;
 				case "KeyS":
+				case "ArrowDown":
 					ro.move_inventory("down");				
 				break;
 				case "KeyD":
+				case "ArrowRight":
 					ro.move_inventory("right");
 				break;
 				case "KeyE":

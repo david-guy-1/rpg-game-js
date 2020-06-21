@@ -12,6 +12,7 @@ class D_Dungeon extends React.Component {
 		// cleared: list of locations (x,y) pairs, that are cleared. 
 	}
 	render(){
+
 	var c = T.display_constants;
 	//css for buttons to go to skills or inventory
 	var skills_button_css = {"position":"absolute", "top":c.skills_button_top_left[1], "left":c.skills_button_top_left[0], "width":c.skills_button_width, "height":c.skills_button_height , "background-color":"lightgreen"};
