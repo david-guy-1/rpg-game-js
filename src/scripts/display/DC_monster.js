@@ -1,4 +1,5 @@
 import React from 'react';
+import * as U from "../utilities.js";
 import {display_constants  as c, images_lst as im} from "../tables.js";
 
 class DC_monster extends React.Component{
@@ -39,8 +40,8 @@ class DC_monster extends React.Component{
 		function(){
 //			console.log(monster.effects)
 			var components = [];
-			for(var i=0; i<monster.effects.length;i++){
-				var effect = monster.effects[i];
+			var effects = U.union_lst(monster.effects);
+			for(var effect of effects){
 				components.push(effect.name + " " + effect.strength.toString() + " (" + effect.duration.toString() +")");
 			}
 			return components;

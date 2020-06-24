@@ -24,6 +24,7 @@ attack, defense, speed and mana are all multiplicative.
 
 class I_Combat{
 	constructor(player, monster_list, dungeon){ // does not mutate these
+	// dungeon can be undefined
 		this.player = player;
 		this.fighting_monsters = [];
 		this.monster_list = monster_list; // not mutated!!!
@@ -39,6 +40,7 @@ class I_Combat{
 	    this.current_ticks = 0; // number of ticks so far
 		this.fight_ended = false;
 		this.fight_result = "";
+		this.has_other_effect = this.has_other_effect.bind(this);
 	}
 
 
@@ -76,7 +78,7 @@ class I_Combat{
 		this.player_mana=player_stats[3];
 		this.player_max_mana=player_stats[3];
 		this.player_current_cd = 0; // in ticks.
-		this.currently_queued_attack = queued_attack;
+		this.currently_queued_attack = queued_attack; // just the index
 		this.currently_attacking_monster = target; // this is the index!
 		this.current_ticks = 0;
 		
@@ -108,12 +110,28 @@ class I_Combat{
 	//returns whether or not the player has this item
 	has_item(item_name){
 		for(var i=0; i<this.player.items.length ;i++){
+			if(this.player.items[i] == undefined){
+				continue;
+			}
 			if(this.player.items[i].name == item_name){
 				return true;
 			}
 		}
 		return false;
 	}
+	//returns whether or not the player has an item with a given tag
+	has_item_with_tag(item_name){
+		for(var i=0; i<this.player.items.length ;i++){
+			if(this.player.items[i] == undefined){
+				continue;
+			}
+			if(this.player.items[i].has_flag(item_name)){
+				return true;
+			}
+		}
+		return false;
+	}
+
 	// returns the first monster with this name, or "undefined" otherwise.
 	get_monster_by_name(monster_name){
 		for(var i=0; i<this.fighting_monsters.length; i++){
@@ -127,56 +145,101 @@ class I_Combat{
 	does_attack_succeed(attack_index, target_monster){ 
 			var attack = this.player.skills[attack_index]
 			var attack_name = attack.name;
-			
-			var undead_only_attacks = ["smite undead"]
-			var has_other_effect = this.has_other_effect.bind(this)
-			
-			// undead only on a non-undead.
-			if(target_monster.has_flag("undead") == false && undead_only_attacks.indexOf(attack_name) != -1){ 
-				return false; 
+			var passed = true;
+			//"require item, require item with tag, require monster tag, require other effect" (all are OR individually, but AND with other requirements)
+			if(attack.has_flag("require item")){
+				// search player's items for an item with this name
+				var items = attack.get_flag("require item");
+				var passed = false;
+				for(var i=0; i < items.length ; i++){
+					if(this.has_item(items[i])){
+						passed = true;
+						break;
+					}
+				}
 			}
-			
-			//cooldown
-			if(this.cooldowns[attack_index] != 0 ){
+			if(!passed){
 				return false;
 			}
-			
-			
-			// smite undead - need sword of undead
-			if(attack_name == "smite undead" && !this.has_item("sword of undead fighting")){
-					return  false;
+
+			if(attack.has_flag("require item with tag")){
+				// search player's items for an item with this name
+				var tags = attack.get_flag("require item with tag");
+				var passed = false;
+				for(var i=0; i < tags.length ; i++){
+					if(this.has_item_with_tag(tags[i])){
+						passed = true;
+						break;
+					}
+				}
 			}
-			// calculate mana here.
-			
-			if(attack_name == "empower" && this.has_other_effect("player", "empower cooldown")){
-				return  false;
+			if(!passed){
+				return false;
 			}
+
+			if(attack.has_flag("require other effect")){
+				// search player's items for an item with this name
+				var tags = attack.get_flag("require other effect");
+				var passed = false;
+				for(var i=0; i < tags.length ; i++){
+					if(target_monster.has_other_effect(tags[i])){
+						passed = true;
+						break;
+					}
+				}
+			}
+			if(!passed){
+				return false;
+			}
+
+			if(attack.has_flag("require monster tag")){
+				// search player's items for an item with this name
+				var tags = attack.get_flag("require monster tag");
+				var passed = false;
+				for(var i=0; i < tags.length ; i++){
+					if(target_monster.has_flag(tags[i])){
+						passed = true;
+						break;
+					}
+				}
+			}
+			if(!passed){
+				return false;
+			}
+
+			
 			return true;
 			
+	}
+	multiply_through_effects(number, effects){
+		U.assert(typeof(effects) == "object");
+		for(var i=0; i<effects.length; i++){
+			U.assert(effects[i] instanceof effect);
+			number *= effects[i].strength;
+		}
+		return number;
 	}
 	
 	 calculate_damage_p2m(attack_index, target_monster){ 
 			var attack = this.player.skills[attack_index]
 			var attack_name = attack.name;
-			var tentative_damage = attack.damageMult*this.player_attack;
-				
+			var tentative_damage = attack.damageMult*this.player_attack
+			
+			var is_damage = (attack.damageMult > 0); // is this an actual damaging attack? because heals are not reduced by defense.
+			
+			if(is_damage){
+				tentative_damage -= target_monster.defense;
+				tentative_damage = Math.max(0, tentative_damage);
+			}
 				
 			// go through every player effect and see if that changes damage dealt.
 			//default effects:
-				for(var i=0;i<this.player_effects.attack.length;i++){
-					var effect = this.player_effects.attack[i];
-					tentative_damage = effect.strength * tentative_damage;
-				}
-				
-				// same for monster
-				for(var i=0;i<target_monster.defense.length;i++){
-					var effect = target_monster.effects.defense[i];	
-					// (monster's) effects, well , effect starts here.
-					tentative_damage = effect.strength * tentative_damage;
-				}
+			tentative_damage = this.multiply_through_effects(tentative_damage, this.player_effects.attack)
 			
-
-
+			if(is_damage){
+				tentative_damage = this.multiply_through_effects(tentative_damage, target_monster.effects.defense)
+			}
+			
 			// non-default effects
 				for(var i=0;i<this.player_effects.other.length;i++){
 					var effect = this.player_effects.other[i];
@@ -196,14 +259,7 @@ class I_Combat{
 				var tentative_cost = attack.mana; 				
 				// go through every player effect and see if that changes mana cost.
 				
-				//default effects
-				for(var i=0;i<this.player_effects.mana.length;i++){
-					var effect = this.player_effects.mana[i];
-					// (player's) effects, well , effect starts here.
-					tentative_cost = tentative_cost * effect.strength;
-				}				
-
-				
+				tentative_cost = this.multiply_through_effects(tentative_cost, this.player_effects.mana)
 				
 				// non-default effects
 				for(var i=0;i<this.player_effects.other.length;i++){
@@ -245,13 +301,10 @@ class I_Combat{
 			var attack_name = attack.name;
 			var tentative_cd = attack.cd; 				
 				// go through every player effect and see if that changes cooldown.
-
-				//default effects
-				for(var i=0;i<this.player_effects.speed.length;i++){
-					var effect = this.player_effects.speed[i];
-					// (player's) effects, well , effect starts here.
-					tentative_cd = tentative_cd * effect.strength;
-				}			
+			
+			tentative_cd = this.multiply_through_effects(tentative_cd, this.player_effects.speed)
+				
+		
 				
 				for(var i=0;i<this.player_effects.other.length;i++){
 					var effect = this.player_effects.other[i];
@@ -300,7 +353,7 @@ class I_Combat{
 	//attack is a monster_skill instance, since there are no indices for monste skills
 	//target_index is either "player", or the index of a monster
 	 does_monster_attack_succeed(attack, target_index){  
-		var has_other_effect = this.has_other_effect.bind(this)
+		var has_other_effect = this.has_other_effect
 		
 		if(has_other_effect("player", "immune")){
 			return false;
@@ -310,23 +363,23 @@ class I_Combat{
 	
 	
 	 calculate_damage_m2p(attack, attacking_monster){
-			var tentative_damage = attack.damage*attacking_monster.attack;
 			
+			var is_damage = (attack.damage > 0);
+			
+			var tentative_damage = attack.damage*attacking_monster.attack;
+			if(is_damage){
+				tentative_damage -= this.player_defense;
+				tentative_damage = Math.max(0, tentative_damage);
+			}
 			// go through every monster effect and see if that changes damage dealt.
 			
 			//default effects:
-				for(var i=0;i<this.player_effects.defense.length;i++){
-					var effect = this.player_effects.defense[i];
-					tentative_damage = effect.strength * tentative_damage;
-				}
-				
-				// same for monster
-				for(var i=0;i<attacking_monster.attack.length;i++){
-					var effect = attacking_monster.effects.attack[i];	
-					// (monster's) effects, well , effect starts here.
-					tentative_damage = effect.strength * tentative_damage;
-				}
-						
+			if(is_damage){
+				tentative_damage = this.multiply_through_effects(tentative_damage, this.player_effects.defense)
+			}
+			
+			tentative_damage = this.multiply_through_effects(tentative_damage, attacking_monster.effects.attack)
+									
 			
 				for(var i=0;i<attacking_monster.effects.other.length;i++){
 					var effect = attacking_monster.effects.other[i];
@@ -341,8 +394,45 @@ class I_Combat{
 				}
 			return Math.floor(tentative_damage);
 	}
-	 calculate_cd_m2p(attack, attacking_monster){
-		var tentative_cd = attack.cd; 				
+	
+	 calculate_damage_m2m(attack, attacking_monster, target_monster_index){
+			var is_damage = (attack.damage > 0);
+			 var target_monster = this.fighting_monsters[target_monster_index];
+			if(target_monster == undefined){
+				throw "calculate_damage_m2m target  undefined";
+			}
+			var tentative_damage = attack.damage*attacking_monster.attack;
+			if(is_damage){
+				tentative_damage -= target_monster.defense;
+			}			
+			// go through every monster effect and see if that changes damage dealt.
+			// don't want defense to reduce healing
+				
+			if(is_damage){
+				tentative_damage = this.multiply_through_effects(tentative_damage, target_monster.effects.defense)
+			}
+			tentative_damage = this.multiply_through_effects(tentative_damage, attacking_monster.attack)
+			
+			
+				
+					
+		// non-default effects 
+				for(var i=0;i<attacking_monster.effects.other.length;i++){
+					var effect = attacking_monster.effects.other[i];
+					
+					// (monster's) effects, well , effect starts here.
+				}
+				
+				// same for player
+				for(var i=0;i<this.player_effects.other.length;i++){
+					var effect = this.player_effects.other[i];	
+					// (player's) effects, well , effect starts here.
+				}
+			return Math.floor(tentative_damage);
+	}
+	
+	 calculate_delay_m2p(attack, attacking_monster){
+		var tentative_delay = attack.delay; 				
 		
 		// go through every monster effect and see if that changes damage dealt.
 				
@@ -356,7 +446,7 @@ class I_Combat{
 					var effect = this.player_effects[i];	
 					// (player's) effects, well , effect starts here.
 				}
-			return Math.floor(tentative_cd);	
+			return Math.floor(tentative_delay);	
 	}
 	
 	 apply_effects_m2p(attack, attacking_monster){
@@ -381,7 +471,32 @@ class I_Combat{
 			}
 		}
 	}
-
+	 apply_effects_m2m(attack, attacking_monster, target_monster_index){
+		var target_monster = this.fighting_monsters[target_monster_index];
+		if(target_monster == undefined){
+			throw "apply_effects_m2m target  undefined";
+		}
+		//self 
+		for(var i=0; i<attack.self_effects.length;i++){
+			var effect = attack.self_effects[i]
+			this.add_effect(attacking_monster.effects, effect);
+		}
+		
+		//target
+		for(var i=0; i<attack.target_effects.length;i++){
+			var effect = attack.target_effects[i]
+			this.add_effect(target_monster, effect);
+		}
+		
+		//all 
+		for(var i=0; i<attack.global_effects.length;i++){
+			for(var j=0; j<this.fighting_monsters.length;j++){
+					var effect = attack.global_effects[i]
+					var monster = this.fighting_monsters[j];
+					this.add_effect(monster.effects, effect);
+			}
+		}
+	}
 	add_effect(current_effects, new_effect){
 		if(new_effect.duration == 0){
 			throw "effect with duration 0";
@@ -401,8 +516,8 @@ class I_Combat{
 	}
 	
 	decrement_effect_duration(effects){
-		console.log(effects.name)
-		console.log(JSON.stringify(effects));
+	//	console.log(effects.name)
+	//	console.log(JSON.stringify(effects));
 		var keys = Object.keys(effects);
 		var expired_effects = [];
 		for(var x of keys){
@@ -475,13 +590,18 @@ class I_Combat{
 			// attack using given attack;
 			var target_monster = this.fighting_monsters[player_queued["target"]]; // this is an actual monster instance
 			var attack = player_queued["skill"]; //this is NOT just the name
-			var mana_cost = this.calculate_mana_cost(this.currently_queued_attack, target_monster)
-			if(mana_cost > this.player_mana){
+			// cooldown
+			
+			if(this.cooldowns[this.currently_queued_attack] != 0){
 				var attack_succeeds = false;
 			} else {
-				var attack_succeeds = this.does_attack_succeed(this.currently_queued_attack, target_monster);
+				var mana_cost = this.calculate_mana_cost(this.currently_queued_attack, target_monster)
+				if(mana_cost > this.player_mana){
+					var attack_succeeds = false;
+				} else {
+					var attack_succeeds = this.does_attack_succeed(this.currently_queued_attack, target_monster);
+				}
 			}
-			
 			// attacks can go wrong;
 			
 				
@@ -504,16 +624,23 @@ class I_Combat{
 		for (var z=0;z<fighting_monsters.length;z++){
 	// monster attacks-------------------
 			var current_monster = fighting_monsters[z];
-			var monster_attack = compute_attack_pattern(current_monster, this);
+			if(current_monster.current_delay != 0){
+				continue;
+			}
+			
+			var monster_attack = compute_attack_pattern(current_monster, this, z);
+			if(monster_attack == undefined){
+				continue;
+			}
 			var monster_attack_target = monster_attack["target"];
 			monster_attack = monster_attack["skill"];
 			
-			//this is damage, cd, effect
-			if(isNaN(current_monster.current_cd)){
-				throw "monster's cd is NaN";
+			//this is damage, delay, effect
+			if(isNaN(current_monster.current_delay)){
+				throw "monster's delay is NaN";
 			}
 			
-			if(current_monster.current_cd == 0 && monster_attack != null){
+			if(current_monster.current_delay == 0 && monster_attack != null){
 				// attack using given attack;
 
 				
@@ -522,17 +649,25 @@ class I_Combat{
 				// attacks can go wrong;
 				
 
-				if(attack_succeeds && monster_attack_target == "player"){ // monster attack succeeds.
-					
-					var damage = this.calculate_damage_m2p(monster_attack, current_monster);
-					var cd = this.calculate_cd_m2p(monster_attack, current_monster);
-					
-					
-					
-					current_monster.current_cd = Math.floor(cd);
-					this.player_hp -= Math.floor(damage);
-					//apply effects
-					this.apply_effects_m2p(monster_attack, current_monster);
+				if(attack_succeeds){// monster attack succeeds.
+
+					var delay = this.calculate_delay_m2p(monster_attack, current_monster);
+					current_monster.current_delay = Math.floor(delay);
+					// target is player
+					if(monster_attack_target == "player"){ 
+						var damage = this.calculate_damage_m2p(monster_attack, current_monster);						
+						this.player_hp -= Math.floor(damage);
+						//apply effects
+						this.apply_effects_m2p(monster_attack, current_monster);
+					}
+					// traget is another monster
+					if(monster_attack_target != "player"){ 
+					// delay done the same way as monster to player.
+						var damage = this.calculate_damage_m2p(monster_attack, current_monster, monster_attack_target);
+						fighting_monsters[monster_attack_target].hp -= Math.floor(damage);
+						//apply effects
+						this.apply_effects_m2m(monster_attack, current_monster, monster_attack_target);
+					}
 				}
 			}
 		}
@@ -590,7 +725,7 @@ class I_Combat{
 		
 		// delays go down
 		for (var k=0;k<fighting_monsters.length; k++){
-			fighting_monsters[k].current_cd = Math.max(fighting_monsters[k].current_cd-1, 0);
+			fighting_monsters[k].current_delay = Math.max(fighting_monsters[k].current_delay-1, 0);
 		}	
 		this.player_current_cd =Math.max(0, this.player_current_cd -1);
 		this.current_ticks++;

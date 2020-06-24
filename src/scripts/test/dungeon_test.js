@@ -68,6 +68,7 @@ async function attack_sequence(seq){
 	var state;
 	var tick_counter= -1;
 	while(true){
+		 
 		await browser.executeScript("return window.game.game_state()").then((x) => state = x);
 		
 		if(state.name != "fighting"){
@@ -89,42 +90,24 @@ async function attack_sequence(seq){
 // test cases start here 
 
 
-/**
- * Sample test case
- * To check whether the given value is present in array.
- */
 
 describe("Home Page", function() {
-	/**
-	 * Test case to load our application and check the title.
-	 */
-
-	it("Should load the home page and get title", function() {
+	it("Should start the browser", function() {
 		this.timeout(0);
 		return new Promise((resolve, reject) => {
 			browser
 				.get(serverUri)
-				.then(logTitle)
-				.then(title => {
-					assert.strictEqual(title, appTitle);
-					resolve();
-				})
-				.catch(err => reject(err));
+				.then(() => resolve())
 		});
 	});
-
-	/**
-	 * Test case to check whether the given element is loaded.
-	 */
-
-
 
 });
 
 
 describe("load Dungeon", function() {
-	before(()=>refresh("town"));
-	
+	before(async function(){
+		await refresh("town")
+	});
 	it("Should have instructoins", function() {
 		this.timeout(0);
 		return new Promise(async function(resolve, reject) {
@@ -150,6 +133,9 @@ describe("load Dungeon", function() {
 				assert.strictEqual(state.items_dropped[0].name, "enchanted sword");
 				assert.strictEqual(state.items_dropped[1].name, "sword of undead fighting");
 				assert.strictEqual(state.items_dropped[2].name, "ring of health");
+				
+				
+				
 				resolve(1);
 			
 		})

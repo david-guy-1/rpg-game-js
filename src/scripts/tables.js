@@ -23,7 +23,7 @@ export var display_constants  = {
 	"skill_height" :50,
 	"skill_gap":0,
 	"skill_top_left":[100, 390],
-	"skill_internal_padding":3,
+	"skill_internal_padding":4,
 
 	//player health bar
 	"player_health_bar_top_left" : [100, 514],
@@ -147,7 +147,8 @@ export var images_lst = { // images for all things: monsters, items, etc.
 	"temp_monster":"temp3.jpg",
 	"boss":"boss.jpg",
 	"generated":"generated.jpg",
-	
+	"defensive monster":"defensive monster.jpg",
+	"night monster":"night_monster.jpg",
 	
 	
 	"sword of undead fighting":"sword_of_undead.jpg",
@@ -156,6 +157,8 @@ export var images_lst = { // images for all things: monsters, items, etc.
 	"enchanted sword":"epic_sword.jpg",
 	"useless item":"useless_item.jpg",
 	"ring of health":"ring_of_health.jpg",
+	"amulet of the sun":"amulet_of_the_sun.jpg",
+	"great shield":"great_shield.jpg",
 	"no_item":"no_item.jpg",
 	
 }

@@ -150,7 +150,7 @@ class App2 extends React.Component {
 
 		
 		if(game.game_state() == undefined){
-			return <div> <input type="text" id="code" /> <button onClick={function(){game.load_test_case(document.getElementById('code').value); controller.rerender();}} id="load_button">Load test </button> </div>;
+			return <div> <input type="text" id="code" /> <button onClick={function(){controller.load_test_case(document.getElementById('code').value); controller.rerender();}} id="load_button">Load test </button> </div>;
 		}
 		
 		var stack = this.interface_stack;

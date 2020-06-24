@@ -12,17 +12,26 @@ class DC_skill extends React.Component{
 		var id = this.props.id;
 		var cd = this.props.cooldown;
 		var attacks_labels = ["A","S","D","F","G","Z","X","C","V","B"];
+		// background color
+		if(chosen && cd == 0){ //chosen and ready
+			var background_color = "#ffaaaa";
+		} else if(!chosen && cd == 0){ //not chosen and ready
+			var background_color = "#ffffff";
+		} else if(chosen && cd != 0){ //chosen and not ready
+			var background_color = "#cc7777";
+		} else if(!chosen && cd != 0){ //not chosen and not ready
+			var background_color = "#777777";
+		}  	
 		return <div style={
-			{"position":"absolute",
+			{
 			"width":c.skill_width + "px",
 			"height":c.skill_height + "px",	
-			"top":( (id>4? c.skill_height : 0)) + "px",
-			"left":(  (id%5) * (c.skill_width+2*c.skill_internal_padding+1)) + "px",
 			"border":"1px solid black",
 			"padding":c.skill_internal_padding + "px",
-			"background-color":(chosen? "#ffaaaa" : "#ffffff"),
+			"background-color":background_color,
+			
 		} }
-		><span style={{"background-color":(cd == 0 ? "#ffffff" : "#777777")}}>{attacks_labels[id]}: </span> {skill.name} {cd}<br />Mana : {skill.mana} , cd : {skill.cd}</div>
+		><span >{attacks_labels[id]}: </span> {skill.name} {cd}<br />Mana : {skill.mana} , cd : {skill.cd}</div>
 	}
 }
 

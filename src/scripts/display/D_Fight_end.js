@@ -19,7 +19,7 @@ class D_Fight_end extends React.Component {
 		this.move_left = this.move_left.bind(this);
 		this.move_right = this.move_right.bind(this);
 		this.select_item = this.select_item.bind(this);
-		this.render = this.render.bind(this);
+		this.render = this.render;
 	}
 	move_left(){
 		this.context.game.select_left();

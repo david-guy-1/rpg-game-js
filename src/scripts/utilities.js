@@ -300,7 +300,7 @@ export function assert(condition, message = ""){
 // check_type(["3", new Set([3, 2])], ["string", Set]) => true
 export function check_type(x, y){
 	for(var i=0; i<x.length && i < y.length; i++){
-		if(typeof(x[i]) == y[i] || typeof(x[i]) == "object" && x[i] instanceof y[i]){
+		if(y[i] == "any" || typeof(x[i]) == y[i] || typeof(x[i]) == "object" && x[i] instanceof y[i]){
 			continue;
 		}
 		return false;
@@ -308,9 +308,18 @@ export function check_type(x, y){
 	return true;
 }
 
-// attack utilities
-
-// see I_Combat for special effects
+ // given an object, for all values that are arrays ,concatenate them and return it. 
+ // does not clone the objects in the arrays.
+export function union_lst(obj){
+	var array = [];
+	for (var key in obj){
+		var value = obj[key];
+		if(Array.isArray(value)){
+			array = array.concat(value);
+		}
+	}
+	return array;
+}
 
 
 

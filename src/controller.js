@@ -1,5 +1,6 @@
 import React from 'react';
 import * as T from "./scripts/tables.js";
+import * as TD from "./scripts/test/test_data.js";
 class controller{
 	// view is an App.js instance
 	constructor(game, view){
@@ -101,19 +102,18 @@ class controller{
 			// fighting an enemy right now
 			if(state.name == "fighting"){
 				this.set_fight_interval();
-				var inst = game.game_state().combat_instance;
 				var skillKeys = ["KeyA", "KeyS", "KeyD", "KeyF", "KeyG", "KeyZ", "KeyX", "KeyC", "KeyV", "KeyB" ];
 				if(skillKeys.indexOf(e.code) != -1){
 					var index = skillKeys.indexOf(e.code);
-					if(inst.player.skills[index] != undefined){
-						inst.currently_queued_attack = index;
+					if(game.player.skills[index] != undefined){
+						game.set_currently_queued_attack(index)
 					}
 				}
 				var targetKeys = ["Digit1","Digit2","Digit3","Digit4","Digit5", ];
 				if(targetKeys.indexOf(e.code) != -1){
 					var index = targetKeys.indexOf(e.code);
-					if(inst.fighting_monsters[index] != undefined){
-						inst.currently_attacking_monster = index;
+					if(state.combat_instance.fighting_monsters[index] != undefined){
+						game.set_currently_attacking_monster(index)
 					}
 				}
 			}
@@ -266,6 +266,32 @@ class controller{
 	rerender(){
 		this.view.forceUpdate();
 	}
+	
+	load_test_case(name){
+		if(name == "town"){
+			TD.test_town(this.game);
+			
+		}
+		if(name == "town2"){
+			TD.test_town_quest(this.game);
+		}
+		if(name == "show"){
+			TD.test_show_dungeons(this.game);
+		}
+		if(name == "dungeon test"){
+			TD.test_generated_dungeon(this.game);
+		}
+		if(name == "effects test"){
+			TD.test_effects_fight(this.game);
+		}
+		if(name == "requirements test"){
+			TD.test_requirements(this.game);
+		}
+		this.game.started = true;
+		this.rerender();
+	}
+	
+	
 }
 
 export default controller;

@@ -17,6 +17,8 @@ class D_Combat extends React.Component {
 		// player cd 0 two frames in a row?
 		var zero_twice = this.zero_last_tick && cd ==0 && combat.current_ticks != 0; 
 		this.zero_last_tick = cd == 0;
+		var true_width = c.skill_width+2*c.skill_internal_padding+2
+		var true_height = c.skill_height+2*c.skill_internal_padding+2;
 		//console.log(combat);
 	    return (
 		  <div className="App">
@@ -39,21 +41,21 @@ class D_Combat extends React.Component {
 		  
 		  {/* render skills  */}
 		  
-		<div style={{ "position":"absolute", "top" : c.skill_top_left[1] + "px", "left" : c.skill_top_left[0] + "px"}}>
+
 		{
 			function(){
 				var components = [];
 				for(var i=0; i<10; i++){
 					if(combat.player.skills[i] != undefined){
 						// not on cooldown
-							components.push(<div onClick = {function(){combat.currently_queued_attack = this}.bind(i)}><DC_skill key={i} id={i} skill={combat.player.skills[i]}  selected={combat.currently_queued_attack == i} cooldown={combat.cooldowns[i]}/></div>);
+							components.push(<div onClick = {function(){combat.currently_queued_attack = this}.bind(i)} style={{ "position":"absolute", "top" : c.skill_top_left[1] +(i < 5 ? 0 : true_height), "left" : c.skill_top_left[0]  + (true_width)*(i%5)}}><DC_skill key={i} id={i} skill={combat.player.skills[i]}  selected={combat.currently_queued_attack == i} cooldown={combat.cooldowns[i]}/></div>);
 						
 					}
 				}
 				return components;
 			}()
 		}
-		</div>
+		
 	{ /* health bars */ }
 		<div id="player_health_bar" style={
 		{"position":"absolute","top":c.player_health_bar_top_left[1]+"px","left":c.player_health_bar_top_left[0],"width":c.player_health_bar_width + "px", "height":c.player_health_bar_height + "px", "background-color":"grey",}
@@ -89,8 +91,8 @@ class D_Combat extends React.Component {
 				return <h2>Press any key to begin combat</h2>
 			} else {
 				var component = [];
-				for(var j=0; j<combat.player_effects.length;j++){
-					var effect = combat.player_effects[j];
+				var effects = U.union_lst(combat.player_effects);
+				for(var effect of effects){
 					component.push(effect.name + " " + effect.strength.toString() + "(" + effect.duration.toString() + "). ") ;
 				}
 				return component;

@@ -99,6 +99,7 @@ class game {
 	}
 
 	// fight commands:
+	// this is an I_Combat instance
 	start_fight(combat_instance){
 		U.assert(U.check_type(arguments, [I_Combat]));
 		this.game_stack.push({name :"fighting",combat_instance :combat_instance});
@@ -122,6 +123,15 @@ class game {
 				this.player_lose();
 			}
 		}
+	}
+	// these are just indices (a number, that's it)
+	set_currently_queued_attack(n){
+		U.assert(this.game_state().name == "fighting");
+		this.game_state().combat_instance.currently_queued_attack = n;
+	}
+	set_currently_attacking_monster(n){
+		U.assert(this.game_state().name == "fighting");
+	    this.game_state().combat_instance.currently_attacking_monster = n;
 	}
 	// player lose commands
 	player_lose(){
@@ -279,151 +289,7 @@ class game {
 	}
 	
 	//test cases
-	test_fight(){
-				
-		var basic_attack = new player_skill("basic attack", 100, 40, 0, [], [], [], "A basic attack");
-		var protect = new player_skill("protect", 0, 40, 30, [new effect("immune", 40, 0, "player"), new effect("protect cd", 5000, 0, "player") ], [], [], "makes yourself temporarily immune to damage for 40 ticks. 5000 ticks cooldown");
-		this.player = new playerC(5, 10, 1000, 1000, U.fillArray(undefined, 6), [basic_attack,protect ]);
-		
-		
-		
-		var item1 = new item("enchanted sword", 1000, 0, 0, 0, "A sword that does a ton of damage");
-		var item2 = new item("sword of undead fighting", 3, 0, 0,0, "Must be equipped to use the smite undead skill");
-
-		var monster1 = new monster("goblin", 10, 0,100, [], "",[] , {"gold":10});
-		var monster2 = new monster("skeleton", 20, 0,2000, ['undead'],"" , [item1, item2] , {})
-		var monster3 = new monster("test", 0, 0,2000, [],"", [], {"gold":31} );
-		 monster1.effects.push(new effect("alice", 100, 10, "monster", []));
-		monster3.hp = 1000;
-		
-		var monster4 = new monster("test", 0, 0,2000, [],"", [] , {"gold":25});
-		var monster5 = new monster("test", 0, 0,2000, [],"", [] , {"gold":12});
-		
-		var inst = new I_Combat(this.player, [monster1, monster2,monster3, monster4, monster5], []);
-		this.player.hp = 9999999;
-		this.start_fight(inst);
-	}
-	// same as the dungeon one
-	test_fight_2(){
-		// equip items
-		var items = data.make_items();
-		this.player.items[0] = items[0];
-		this.player.items[1] = items[1];
-		this.player.items[2] = items[2];		
-		//make monsters;
-		var monsters = data.make_monsters();
-		//equip skills
-		this.skill_pool = data.make_skills();
-		this.player.skills[0] = this.skill_pool[0];
-		this.player.skills[1] = this.skill_pool[1];
-		this.player.skills[2] = this.skill_pool[2];
-		this.player.skills[3] = this.skill_pool[1];
-		this.player.skills[4] = this.skill_pool[2];
-		this.player.skills[5] = this.skill_pool[1];
-		this.player.skills[6] = this.skill_pool[2];
-		this.player.skills[7] = this.skill_pool[1];
-		this.player.skills[8] = this.skill_pool[2];
-		this.player.skills[9] = this.skill_pool[1];
-		this.player.skills[10] = this.skill_pool[2];
-		//start a fight!
-		this.start_fight(new I_Combat(this.player, monsters, undefined));
-	}
-	test_fill_inventory(){
-		var blanks = U.count(this.inventory, undefined);
-		for(var i = 0; i < blanks; i++){
-			this.give_item(new item("useless item", 0, 0, 0, 0, "A completely useless item"));
-		}
-	}
-	test_dungeon(){
-		/*
-		<ul>
-		<li>go to the key to open the door. equip all 3 items, and use them to kill the monsters.</li>
-		<li>Note that the skeleton does a one-shot at 100 ticks. Use protect to defend against that.</li>
-		<li>The smite undead monster requires the monster to be undead, and also for you to have a sword of undead fighting.</li>
-		<li>You also need the ring of health to survive their attacks.</li>
-		</ul>
-		*/
-		
-		this.skill_pool = data.make_skills();
-		var dungeon_inst = data.make_dungeon();
-		
-		this.enter_dungeon(dungeon_inst);
-	}
-	test_town(){
-		this.skill_pool = data.make_skills();
-		
-		this.enter_town(data.make_town_by_name("town1"));
-	}
-	test_town_quest(){
-		var items = data.make_items();
-		var skills = data.make_skills();
-		this.player.items[0] = items[0];
-		this.player.skills[0] = skills[0];
-		this.enter_town(data.make_town_by_name("town2"));
-	}
-	test_show_dungeons(){
-		
-		this.parameter = 0;
-		this.seed = prompt();
-		setInterval(function(){
-		this.parameter += 1;
-		console.log(this.seed + this.parameter);
-		this.enter_dungeon(dungeon_generator("name", 10, this.seed + this.parameter,0.8 , 0.2, 4, 10, 10))
-		this.dismiss();
-		window.controller.rerender();
-		}.bind(this), 1000);
-		
-	}
-	test(){
-		// misc tests go here.
-		var items = data.make_items();
-		var skills = data.make_skills();
-		items[0].attack = 7500;
-		this.player.items[0] = items[0];
-		this.player.items[1] = items[2];
-		this.player.skills[0] = skills[0];
-		this.player.skills[1] = skills[3];
-		this.player.skills[2] = skills[4];
-		this.seed = prompt();
-		
-		this.enter_dungeon(dungeon_generator("name", 10, this.seed ,0.8 , 0.2,4 , 10, 10))
-		this.dismiss();
-		window.controller.rerender();
-		
-		 
-	}
 	
-	test_dungeon_skills(){
-
-		
-		this.player.skills = data.make_effect_skills();
-		this.player.items = data.make_items();
-		var dungeon_inst = data.make_dungeon();
-		dungeon_inst.entities[1][2].monsters.splice(1, 1); // no instant kills
-		this.enter_dungeon(dungeon_inst);
-	}
-	
-	
-	load_test_case(name){
-		if(name == "town"){
-			this.test_town();
-			
-		}
-		if(name == "town2"){
-			this.test_town_quest();
-		}
-		if(name == "show"){
-			this.test_show_dungeons();
-		}
-		if(name == "dungeon test"){
-			this.test();
-		}
-		if(name == "skills test"){
-			this.test_dungeon_skills();
-		}
-		this.started = true;
-	}
-
 }
 
 

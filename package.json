@@ -18,6 +18,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "dungeon_test": "mocha src/scripts/test/dungeon_test.js",
+	"effects_test": "mocha src/scripts/test/effects_test.js",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
