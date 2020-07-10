@@ -19,20 +19,19 @@ const appTitle = "React App";
  * Config for Chrome browser
  * @type {webdriver}
  */
+var test_unit =  require('./test_utils.js').X;
+
 
 var browser = new webdriver.Builder()
 	.usingServer()
 	.withCapabilities({ browserName: "chrome" })
 	.build();
-async function refresh(test_name){
-		var currentURL = browser.getCurrentUrl(); 
-		browser.get(currentURL); 
-		browser.navigate().refresh();
-		await sleep(300);
-		browser.findElement({ id: "code" }).sendKeys(test_name);
-		browser.findElement({ id: "load_button" }).click();
-		await sleep(300);
-}
+
+var TU = new test_unit(browser)
+
+
+
+
 function logTitle() {
 	
 	return new Promise((resolve, reject) => {
@@ -42,49 +41,10 @@ function logTitle() {
 	});
 }
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+
 
 //mouse click
-async function click(x,y){
-	           browser.actions({bridge: true})
-				.move({x:x, y:y}) 
-                .click( undefined).perform(); // start a dungeon
-	await sleep(200);
-}
-//keyboard press
-//use things like webdriver.Key.RIGHT
-async function press(key){
-				browser.actions({bridge: true})
-				.sendKeys(key)
-				.perform();
-				await sleep(100);
-}
 
-async function attack_sequence(seq){
-	//seq is an object (tick number -> key to press);
-	// will press the key at the given time
-	var state;
-	var tick_counter= -1;
-	while(true){
-		 
-		await browser.executeScript("return window.game.game_state()").then((x) => state = x);
-		
-		if(state.name != "fighting"){
-			return;
-		}
-		var game_counter;
-		game_counter = state.combat_instance.current_ticks;
-		
-		Object.keys(seq).forEach(function(x){
-			if(x > tick_counter && x <= game_counter){
-				press(seq[x]);
-			}
-		})
-		tick_counter = game_counter;
-	}
-}
 
 
 // test cases start here 
@@ -106,12 +66,12 @@ describe("Home Page", function() {
 
 describe("load Dungeon", function() {
 	before(async function(){
-		await refresh("town")
+		await TU.refresh("town")
 	});
 	it("Should have instructoins", function() {
 		this.timeout(0);
 		return new Promise(async function(resolve, reject) {
-			await sleep(200);
+			await TU.sleep(200);
 			browser
 				.findElement({ id: "instructions" })
 				.then(elem => resolve())
@@ -123,7 +83,7 @@ describe("load Dungeon", function() {
 		this.timeout(0);
 		return new Promise(async function(resolve, reject) {
 	
-				await click(311, 316);
+				await TU.click(311, 316);
 				//get game state
 				var state=0;
 				await browser.executeScript("return window.game.game_state()").then((x) => state = x);
@@ -149,7 +109,7 @@ describe("load Dungeon", function() {
 				var RElem;
 				var selectElem;
 				var leaveElem;
-				await sleep(200);
+				await TU.sleep(200);
 				await browser.findElement({ xpath: "//h2[text()[contains(., \"R\")]]" }).then((x) => RElem =x);
 				await browser.findElement({ xpath: "//p[text()[contains(., \"deselect\")]]" }).then((x) => selectElem =x);	
 				await browser.findElement({ xpath: "//button[text()[contains(., \"Go back\")]]" }).then((x) => leaveElem =x);	
@@ -194,7 +154,7 @@ describe("load Dungeon", function() {
 	it("Should not be able to get the items again", function(){
 		this.timeout(0);
 		return new Promise(async function(resolve, reject) {
-			await click(311, 316);
+			await TU.click(311, 316);
 			//try clicking on it again, it should not work
 			await browser.executeScript("return window.game.game_state()").then(function(state){
 				assert.strictEqual(state.name, "town");
@@ -206,7 +166,7 @@ describe("load Dungeon", function() {
 		this.timeout(0);
 		return new Promise(async function(resolve, reject) {
 	
-				await click(893, 254);
+				await TU.click(893, 254);
 				//get game state
 				var state=0;
 				await browser.executeScript("return window.game.game_state()").then((x) => state = x);
@@ -226,7 +186,7 @@ describe("load Dungeon", function() {
 		return new Promise(async function(resolve, reject) {
 			//press space
 
-			await press(" "); 
+			await TU.press(" "); 
 			//get the state
 			var state=0;
 			await browser.executeScript("return window.game.game_state()").then((x) => state = x);
@@ -252,11 +212,11 @@ describe("load Dungeon", function() {
 				
 				// now let's equip items
 				for(var i=0; i<3;i++){
-					await press("e")
-					await press("d")
-					await press("f")
+					await TU.press("e")
+					await TU.press("d")
+					await TU.press("f")
 				} 
-				await press(" ");
+				await TU.press(" ");
 				
 				// ending
 				var game, state;
@@ -289,14 +249,14 @@ describe("load Dungeon", function() {
 				
 				// now let's equip skills
 				
-				await press("e")
-				await press("s")
-				await press(webdriver.Key.RIGHT)
-				await press("e")
-				await press("d")
-				await press(webdriver.Key.RIGHT)
-				await press("e")
-				await press(" ");
+				await TU.press("e")
+				await TU.press("s")
+				await TU.press(webdriver.Key.RIGHT)
+				await TU.press("e")
+				await TU.press("d")
+				await TU.press(webdriver.Key.RIGHT)
+				await TU.press("e")
+				await TU.press(" ");
 				
 				// ending
 				var game, state;
@@ -321,10 +281,10 @@ describe("load Dungeon", function() {
 		this.timeout(0);
 		return new Promise(async function(resolve, reject) {
 			//press space
-		await sleep(200);
-			await press("D");
-			await press("D");	
-			await sleep(200);
+		await TU.sleep(200);
+			await TU.press("D");
+			await TU.press("D");	
+			await TU.sleep(200);
 			//get the state
 			var state=0;
 			await browser.executeScript("return window.game.game_state()").then((x) => state = x);
@@ -336,12 +296,12 @@ describe("load Dungeon", function() {
 	it("Should be able to complete the fight, this is the trivial fight so should end immediately", function(){
 		this.timeout(0);
 		return new Promise(async function(resolve, reject) {
-			await press(" ");
+			await TU.press(" ");
 			// fight ends immediately
 			await browser.executeScript("return window.game.game_state()").then((x) => assert.strictEqual(x.name, "fight end"));
 			// click the leave button
 			await browser.findElement({ xpath: "//button[text()[contains(., \"Go back\")]]" }).then((x) =>  x.click());
-			await sleep(100);
+			await TU.sleep(100);
 			// we should be in the dungeon again
 			await browser.executeScript("return window.game.game_state()").then(function(state){
 				assert.strictEqual(state.dungeon_instance.entities.length, 3);						
@@ -356,16 +316,16 @@ describe("load Dungeon", function() {
 		this.timeout(0);
 		return new Promise(async function(resolve, reject) {
 				// move to the next fight
-				await press("a");
-				await press("a");
-				await press("s");
-				await press("s");
-				await press("d");
-				await press(" ");
+				await TU.press("a");
+				await TU.press("a");
+				await TU.press("s");
+				await TU.press("s");
+				await TU.press("d");
+				await TU.press(" ");
 				//start the fight
-				await attack_sequence({60: "d", 90:"a", 220:"s", 350:"a"})
+				await TU.attack_sequence({60: "d", 90:"a", 220:"s", 350:"a"})
 				// when the fight is over, get the item
-				await press(" ")
+				await TU.press(" ")
 				
 				//assertions:
 				await browser.executeScript("return window.game").then(function(game){
@@ -393,24 +353,24 @@ describe("load Dungeon", function() {
 			await browser.executeScript("return window.game.game_state().dungeon_instance").then((x) => inst = x);
 			assert.strictEqual(inst.unlocked[0], false);
 			// move to the key
-			await press("s");
-			await press("s");
+			await TU.press("s");
+			await TU.press("s");
 			
 			//we are now on the key, check that the lock has been opened
 			await browser.executeScript("return window.game.game_state().dungeon_instance").then((x) => inst = x);
 			assert.strictEqual(inst.unlocked[0], true);			
 			//move to the item;
-			await press("a");
-			await press("w");
-			await press("w");
-			await press("w");
-			await press("d");
+			await TU.press("a");
+			await TU.press("w");
+			await TU.press("w");
+			await TU.press("w");
+			await TU.press("d");
 			//check that we are there
 			await browser.executeScript("return window.game.game_state()").then(function(x){ assert.strictEqual(x.name, "fight end")});
 			
 			//don't take the item, it's useless		
-			await press("q");
-			await press(" ");
+			await TU.press("q");
+			await TU.press(" ");
 			await browser.executeScript("return window.game").then(function(x){ 
 				assert.strictEqual(x.inventory[1], null);
 				//but we should still have the gold
@@ -434,7 +394,7 @@ describe("load Dungeon", function() {
 				
 				// leave inventory
 				
-				await press(" ");
+				await TU.press(" ");
 				resolve(1);
 		});
 	});
@@ -444,26 +404,26 @@ describe("load Dungeon", function() {
 		this.timeout(0);
 		return new Promise(async function(resolve, reject) {
 				// move to the next fight
-				await press("a");
-				await press("s");
-				await press("d");
-				await press("d");
-				await press(" ");
+				await TU.press("a");
+				await TU.press("s");
+				await TU.press("d");
+				await TU.press("d");
+				await TU.press(" ");
 				//start the fight
-				await attack_sequence({0:"a"})
+				await TU.attack_sequence({0:"a"})
 				// when the fight is over, get the item
-				await press(" ")
+				await TU.press(" ")
 				
 				//assertions:
 				await browser.executeScript("return window.game.game_state()").then(function(state){
 					// 1 entity left
 					assert.strictEqual(state.dungeon_instance.entities.length, 1)
 				});
-				await press("s");
-				await press("d");
-				await press(" ");
-				await attack_sequence({1:"s"})				
-				await press(" ");
+				await TU.press("s");
+				await TU.press("d");
+				await TU.press(" ");
+				await TU.attack_sequence({1:"s"})				
+				await TU.press(" ");
 				// more assertions
 				
 				await browser.executeScript("return window.game.game_state()").then(function(state){
@@ -480,10 +440,10 @@ describe("load Dungeon", function() {
 				resolve(1);
 		});
 	});
-	it("Should be able to finish the dungeon", function(){
+	it("Should be able to finish the dungeon, and not go back", function(){
 		this.timeout(0);
 		return new Promise(async function(resolve, reject) {
-			await press("a");
+			await TU.press("a");
 			await browser.executeScript("return window.game.game_state()").then(function(state){
 				// dungeon end
 				assert.strictEqual(state.name, "dungeon end");
@@ -492,7 +452,7 @@ describe("load Dungeon", function() {
 				assert.strictEqual(state.dungeon_instance.dungeon.name, "Tutorial Dungeon");				
 			})
 			// go back to town
-			await press("a");
+			await TU.press("a");
 			
 			await browser.executeScript("return window.game").then(function(game){
 				// dungeon end
@@ -502,7 +462,7 @@ describe("load Dungeon", function() {
 				assert.strictEqual(game.progress.town1_dungeon, true);
 				
 			})
-			await click(893, 254);			
+			await TU.click(893, 254);			
 			//try clicking on it again, it should not work
 			await browser.executeScript("return window.game.game_state()").then(function(state){
 				assert.strictEqual(state.name, "town");
