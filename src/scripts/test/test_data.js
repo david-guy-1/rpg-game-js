@@ -1,7 +1,7 @@
 /*
 to add a test:
 
-"dungeon_test": "mocha src/scripts/test/dungeon_test.js",
+"dungeon_test": "mocha src/scripts/test/dungeon_test.tsx",
 then do "npm run dungeon_test"
 
 note that asserts are not included in selenium , they are in node!
@@ -11,27 +11,27 @@ https://www.selenium.dev/selenium/docs/api/javascript/index.html
 and "describe" is in mocha
 
 */
-import * as U from '../utilities.js';
-import I_Combat from '../instances/I_Combat.js';
-import I_Dungeon from '../instances/I_Dungeon.js';
-import playerC from '../classes/playerC.js';
-import monster from '../classes/monster.js';
-import player_skill from '../classes/player_skill.js';
-import effect from '../classes/effect.js';
-import town from '../classes/town.js';
-import item from "../classes/item.js";
-import dungeon from "../classes/dungeon.js"
-import dungeon_entity from "../classes/dungeon_entity.js"
-import * as data from "../data/data.js";
-import monster_generator from '../generators/G_Monster.js';
-import dungeon_generator from "../generators/G_Dungeon.js";
+import * as U from '../utilities';
+import I_Combat from '../instances/I_Combat';
+import I_Dungeon from '../instances/I_Dungeon';
+import player from '../classes/player';
+import monster from '../classes/monster';
+import player_skill from '../classes/player_skill';
+import effect from '../classes/effect';
+import town from '../classes/town';
+import item from "../classes/item";
+import dungeon from "../classes/dungeon"
+import dungeon_entity from "../classes/dungeon_entity"
+import * as data from "../data/data";
+import monster_generator from '../generators/G_Monster';
+import dungeon_generator from "../generators/G_Dungeon";
 
 
 export function test_fight(game){
 				
 		var basic_attack = new player_skill("basic attack", 100, 40, 0, [], [], [], "A basic attack");
 		var protect = new player_skill("protect", 0, 40, 30, [new effect("immune", 40, 0, "player"), new effect("protect cd", 5000, 0, "player") ], [], [], "makes yourself temporarily immune to damage for 40 ticks. 5000 ticks cooldown");
-		game.player = new playerC(5, 10, 1000, 1000, U.fillArray(undefined, 6), [basic_attack,protect ]);
+		game.player = new player(5, 10, 1000, 1000, U.fillArray(undefined, 6), [basic_attack,protect ]);
 		
 		
 		
@@ -165,5 +165,5 @@ export function test_requirements(game){
 	game.enter_dungeon(dungeon);
 	
 }
-	
+
 

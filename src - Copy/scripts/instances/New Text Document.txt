@@ -1,0 +1,1 @@
+"instances" are things that the game class has as variables when the game stack contains the relevant item. For example, if the game stack has "combat", then the game has a "I_combat" object. 

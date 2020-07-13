@@ -1,0 +1,54 @@
+move on a grid. moving on top of monster begins combat.
+
+combat is in real time (anti-idle style), except the monsters don't move. they just attack at set intervals. 
+
+if a single basic attack kills the monster, do nothing. Otherwise, timers start when the monster begins.
+
+need some kind of skill to win fights at lower stats. choose which skill to use at which time.
+
+-----
+
+what classes to make?
+
+"map/overworld" class, "player" class, "monster" class, etc.
+
+firstly, handle combat. Combat is in "ticks" - 10 ticks per second. (although the classes don't know this). 
+
+classes are always sent an "use the queued attack" command, which is ignored if the time is not up.
+
+----
+implementation ideas:
+
+global variables for game state - walking? fighting? in options menu? etc.
+Also, stuff like "board is 10x10", "monster at (1, 1)", "boss at (1, 2)", etc. is stored as a global var.
+If a fight is going on, the enemies will be global vars. This is because many functions might need to know what enemies there are.
+
+"world" function handles movement. When something happens (say, a movement) this might change game state to "fighting" but overworld doesn't know about game state.
+
+fighting has "fight_start, fight_end, fight_tick" functions. fight_start handles the beginning of fighting (change game state, etc.)
+
+"fight_tick" function  that has "player queued" as input. It handles the result for the player attack, calls the ai for enemy's attacks, and then outputs the result. The function then checks if the fight should end.
+
+"fight_end" function is called by fight_tick if the fight ends. input: player and list of enemies (player or all enemies die, etc.). When called it changes game state and does other stuff (removes enemy from global enemies list, etc.)
+
+"update_interface" updates the interface with an assignment to every part, even those that did not change. This simplifies the code by not having to worry about what has changed and what has not changed.
+
+"game loop" function is called on a loop. It handles inputs. If there are inputs sent to the game, it will determine what needs to be done and the do it. For example, if the state is "walking", the "world" function needs to be called to make a move, but not if the state is "fighting". This check is done in the game loop function. This is so the game's variables don't have to know about controls. The game loop function handles that already. It also handles things like "call fight_tick if state is fighting". Finally, it updates the interface.
+
+note: decorator design pattern can be used for attacks.
+
+maybe the display state is should be turned into a stack data structure.
+
+TODO: refactor
+
+everything (effects, enemies, items, etc.) should be in a class and have a clone method.
+
+make a "monster generator" and "dungeon generator" (this requires a dungeon class!!!!)
+
+make the interface into react (this can be postponed, since we already have all relevant interfaces).
+
+mouse input as well
+
+make a "dungeon reward" thingy.
+
+
